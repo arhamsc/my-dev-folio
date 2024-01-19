@@ -16,5 +16,12 @@
     "editor.defaultFormatter": "esbenp.prettier-vscode"
   },
   "typescript.tsdk": "node_modules/typescript/lib",
-  "cSpell.words": ["darkgradient", "Seachbar", "Searchbar", "Upvotes"]
+  "cSpell.words": [
+    "darkgradient",
+    "downvotes",
+    "maxlength",
+    "Seachbar",
+    "Searchbar",
+    "Upvotes"
+  ]
 }
