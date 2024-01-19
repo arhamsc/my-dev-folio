@@ -1,6 +1,44 @@
-import { type ClassValue, clsx } from "clsx"
-import { twMerge } from "tailwind-merge"
+import { type ClassValue, clsx } from "clsx";
+import { twMerge } from "tailwind-merge";
 
 export function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs))
+  return twMerge(clsx(inputs));
 }
+
+export const getTimestamp = (createdAt: Date): string => {
+  const currentDate = new Date();
+  const timeDifference = currentDate.getTime() - createdAt.getTime();
+  const minutesDifference = Math.floor(timeDifference / (1000 * 60));
+  const hoursDifference = Math.floor(minutesDifference / 60);
+  const daysDifference = Math.floor(hoursDifference / 24);
+  const weeksDifference = Math.floor(daysDifference / 7);
+  const yearsDifference = Math.floor(daysDifference / 365);
+
+  if (minutesDifference < 1) {
+    return "just now";
+  } else if (minutesDifference < 60) {
+    return `${minutesDifference} minute${
+      minutesDifference === 1 ? "" : "s"
+    } ago`;
+  } else if (hoursDifference < 24) {
+    return `${hoursDifference} hour${hoursDifference === 1 ? "" : "s"} ago`;
+  } else if (daysDifference < 7) {
+    return `${daysDifference} day${daysDifference === 1 ? "" : "s"} ago`;
+  } else if (weeksDifference < 52) {
+    return `${weeksDifference} week${weeksDifference === 1 ? "" : "s"} ago`;
+  } else {
+    return `${yearsDifference} year${yearsDifference === 1 ? "" : "s"} ago`;
+  }
+};
+
+export const formatNumberWithExtension = (inputNumber: number): string => {
+  if (Math.abs(inputNumber) >= 1e9) {
+    return (inputNumber / 1e9).toFixed(1) + "b";
+  } else if (Math.abs(inputNumber) >= 1e6) {
+    return (inputNumber / 1e6).toFixed(1) + "m";
+  } else if (Math.abs(inputNumber) >= 1e3) {
+    return (inputNumber / 1e3).toFixed(1) + "k";
+  } else {
+    return inputNumber.toString();
+  }
+};
