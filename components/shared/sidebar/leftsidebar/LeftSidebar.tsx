@@ -89,7 +89,7 @@ const LeftSidebar = () => {
               height={20}
               alt="logout_icon"
             />
-            <span className="primary-text-gradient max-lg:hidden">Log In</span>
+            <span className="primary-text-gradient max-lg:hidden">Log Out</span>
           </Button>
           {/* </Link> */}
         </SignedIn>
