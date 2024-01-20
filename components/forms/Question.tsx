@@ -19,11 +19,18 @@ import { KeyboardEvent, useRef } from "react";
 import { Badge } from "../ui/badge";
 import Image from "next/image";
 import { createQuestion } from "@/lib/actions/question.action";
+import { usePathname, useRouter } from "next/navigation";
 
 const type: string = "create";
 
-export function Question() {
+type QuestionProps = {
+  mongoUserId: string;
+};
+
+export function Question({ mongoUserId }: QuestionProps) {
   const editorRef = useRef(null);
+  const router = useRouter();
+  const pathname = usePathname();
   // const [isSubmitting, setIsSubmitting] = useState(second)
 
   const form = useForm<z.infer<typeof questionsSchema>>({
@@ -74,13 +81,17 @@ export function Question() {
     // Do something with the form values.
     // ✅ This will be type-safe and validated.
     try {
-     await createQuestion(values);
-    }
-     catch(error) {
-
-     }
+      await createQuestion({
+        title: values.title,
+        content: values.explanation,
+        tags: values.tags,
+        author: JSON.parse(mongoUserId),
+        path: pathname,
+      });
+      router.push("/");
+    } catch (error) {}
     console.log(values);
-  }
+  };
   return (
     <Form {...form}>
       <form
@@ -151,7 +162,6 @@ export function Question() {
                       "codesample | bold italic forecolor | alignleft aligncenter " +
                       "alignright alignjustify | bullist numlist",
                     content_style: "body { font-family:Inter; font-size:16px }",
-                    
                   }}
                   onBlur={field.onBlur}
                   onEditorChange={(value, editor) => field.onChange(value)}
