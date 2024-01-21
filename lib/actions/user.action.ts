@@ -5,12 +5,25 @@ import { connectToDatabase } from "../mongoose";
 import {
   CreateUserParams,
   DeleteUserParams,
+  GetAllUsersParams,
   UpdateUserParams,
 } from "./shared.types";
 import error from "next/error";
 import { revalidatePath } from "next/cache";
 import Question from "@/db/question.model";
 import path from "path";
+
+export async function getUsers(params: GetAllUsersParams) {
+  try {
+    connectToDatabase();
+    const { filter, page, pageSize, searchQuery } = params;
+    const users = await User.find({});
+    return { users };
+  } catch (error) {
+    console.log({ error });
+    throw error;
+  }
+}
 
 export async function getUserById(params: any) {
   try {

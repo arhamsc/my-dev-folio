@@ -81,15 +81,15 @@ const LeftSidebar = () => {
         <SignedIn>
           {/* <Link href={"/"}> */}
           <Button
-            className="small-medium light-border-2 btn-tertiary text-dark400_light900 min-h-[41px] w-full rounded-lg px-4 py-3"
+            className="small-medium light-border-2 text-dark400_light900 flex-start flex min-h-[41px] w-full gap-4 rounded-lg px-4 py-3"
             onClick={() => signOut(() => router.push("/"))}>
             <Image
-              src={"assets/icons/close.svg"}
+              src={"assets/icons/logout.svg"}
               width={20}
               height={20}
               alt="logout_icon"
             />
-            <span className="primary-text-gradient max-lg:hidden">Log Out</span>
+            <span className="max-lg:hidden">Log Out</span>
           </Button>
           {/* </Link> */}
         </SignedIn>
