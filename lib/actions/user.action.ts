@@ -16,8 +16,8 @@ import path from "path";
 export async function getUsers(params: GetAllUsersParams) {
   try {
     connectToDatabase();
-    const { filter, page, pageSize, searchQuery } = params;
-    const users = await User.find({});
+    const { filter, page = 1, pageSize = 20, searchQuery } = params;
+    const users = await User.find({}).sort({createdAt: -1});
     return { users };
   } catch (error) {
     console.log({ error });
