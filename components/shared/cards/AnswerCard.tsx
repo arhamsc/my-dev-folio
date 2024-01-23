@@ -2,10 +2,11 @@ import Link from "next/link";
 import React from "react";
 import Metric from "../Metric";
 import { formatNumberWithExtension, getTimestamp } from "@/lib/utils";
+import EditDeleteActions from "../EditDeleteActions";
 
 type AnswerCardProps = {
   _id: string;
-  author: { _id: string; name: string; picture: string };
+  author: { _id: string; name: string; picture: string, clerkId: string};
   upvotes: Array<object>[];
   question: { _id: string; title: string };
   createdAt: Date;
@@ -22,6 +23,12 @@ const AnswerCard = ({
 }: AnswerCardProps) => {
   return (
     <div className="card-wrapper rounded-[10px] p-9 sm:px-11">
+      <EditDeleteActions
+        authorClerkId={author.clerkId}
+        clerkId={clerkId}
+        itemId={_id}
+        type="answer"
+      />
       <div className="flex flex-col-reverse items-start justify-between gap-5 sm:flex-row">
         <div>
           <span className="subtle-regular text-dark400_light700 line-clamp-1 flex sm:hidden">

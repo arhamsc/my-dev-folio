@@ -3,12 +3,14 @@ import React from "react";
 import RenderTag from "../RenderTag";
 import Metric from "../Metric";
 import { formatNumberWithExtension, getTimestamp } from "@/lib/utils";
+import Image from "next/image";
+import EditDeleteActions from "../EditDeleteActions";
 
 type QuestionCardProps = {
   _id: string;
   title: string;
   tags: { _id: string; name: string }[];
-  author: { _id: string; name: string; picture: string };
+  author: { _id: string; name: string; picture: string; clerkId: string };
   upvotes: Array<object>[];
   views: number;
   answers: Array<object>[];
@@ -29,6 +31,12 @@ const QuestionCard = ({
 }: QuestionCardProps) => {
   return (
     <div className="card-wrapper rounded-[10px] p-9 sm:px-11">
+      <EditDeleteActions
+      authorClerkId={author.clerkId}
+      clerkId={clerkId}
+      itemId={_id}
+      type="question"
+      />
       <div className="flex flex-col-reverse items-start justify-between gap-5 sm:flex-row">
         <div>
           <span className="subtle-regular text-dark400_light700 line-clamp-1 flex sm:hidden">

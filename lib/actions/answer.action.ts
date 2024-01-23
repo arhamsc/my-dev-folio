@@ -1,10 +1,16 @@
 "use server";
 import Answer from "@/db/answer.model";
 import { connectToDatabase } from "../mongoose";
-import { AnswerVoteParams, CreateAnswerParams, GetAnswersParams } from "./shared.types";
+import {
+  AnswerVoteParams,
+  CreateAnswerParams,
+  DeleteAnswerParams,
+  GetAnswersParams,
+} from "./shared.types";
 import { revalidatePath } from "next/cache";
 import Question from "@/db/question.model";
 import { Types } from "mongoose";
+import Interaction from "@/db/interaction.model";
 
 export async function createAnswer(params: CreateAnswerParams) {
   try {
@@ -137,6 +143,30 @@ export async function handleAnswerVote(params: AnswerVoteParams) {
     } else {
       return;
     }
+
+    revalidatePath(path);
+  } catch (error) {
+    console.log({ error });
+    throw error;
+  }
+}
+
+export async function deleteAnswer(params: DeleteAnswerParams) {
+  try {
+    connectToDatabase();
+    const { path, answerId } = params;
+
+    const answer = await Answer.findById(answerId);
+
+    if (!answer) {
+      throw new Error("Answer not found");
+    }
+
+    await Question.findByIdAndUpdate(answer.question, {
+      $pull: { answers: answer._id },
+    });
+    await Interaction.deleteMany({ answer: answer._id });
+    await Answer.findByIdAndDelete(answer._id);
 
     revalidatePath(path);
   } catch (error) {

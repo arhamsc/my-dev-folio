@@ -5,16 +5,18 @@ import { connectToDatabase } from "../mongoose";
 import Tag from "@/db/tag.model";
 import {
   CreateQuestionParams,
+  DeleteQuestionParams,
+  EditQuestionParams,
   GetQuestionByIdParams,
   GetQuestionsParams,
-  GetSavedQuestionsParams,
   QuestionVoteParams,
   ToggleSaveQuestionParams,
 } from "./shared.types";
 import User from "@/db/user.model";
 import { revalidatePath } from "next/cache";
-import path from "path";
-import { Schema, Types } from "mongoose";
+import {  Types } from "mongoose";
+import Answer from "@/db/answer.model";
+import Interaction from "@/db/interaction.model";
 
 export async function getQuestions(params: GetQuestionsParams) {
   try {
@@ -35,8 +37,6 @@ export async function getQuestions(params: GetQuestionsParams) {
     throw error;
   }
 }
-
-
 
 export async function getQuestionById(params: GetQuestionByIdParams) {
   try {
@@ -82,6 +82,26 @@ export async function createQuestion(params: CreateQuestionParams) {
       question.tags.push(existingTag._id);
     }
     await question.save();
+
+    // Increment author's reputation
+
+    // console.log(params);
+    revalidatePath(path);
+  } catch (error) {}
+}
+
+export async function editQuestion(params: EditQuestionParams) {
+  try {
+    connectToDatabase();
+    const { title, content, path, questionId } = params;
+    const question = await Question.findById(questionId);
+    if (!question) {
+      throw new Error("Question not found");
+    }
+    await Question.findByIdAndUpdate(questionId, {
+      title,
+      content,
+    });
 
     // Increment author's reputation
 
@@ -221,6 +241,26 @@ export async function handleQuestionSave(params: ToggleSaveQuestionParams) {
       },
     ]);
 
+    revalidatePath(path);
+  } catch (error) {
+    console.log({ error });
+    throw error;
+  }
+}
+
+export async function deleteQuestion(params: DeleteQuestionParams) {
+  try {
+    connectToDatabase();
+    const { path, questionId } = params;
+    await Question.deleteOne({ _id: questionId });
+    await Answer.deleteMany({ question: questionId });
+    await Interaction.deleteMany({ question: questionId });
+
+    await Tag.updateMany(
+      { questions: questionId },
+      { $pull: { questions: questionId } }
+    );
+    console.log({ questionId });
     revalidatePath(path);
   } catch (error) {
     console.log({ error });
