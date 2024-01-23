@@ -10,7 +10,7 @@ export default authMiddleware({
     "/sign-up",
     "/sign-in",
     "/question/:id",
-    "tags",
+    "/tags",
     "/tags/:id",
     "/profile/:id",
     "/community",

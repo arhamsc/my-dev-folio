@@ -7,6 +7,7 @@ import Image from "next/image";
 import { getTimestamp } from "@/lib/utils";
 import ParseHTML from "./ParseHTML";
 import Votes from "./Votes";
+import { SignedIn } from "@clerk/nextjs";
 
 interface AllAnswersProps {
   questionId: string;
@@ -56,17 +57,19 @@ const AllAnswers = async ({
                   </div>
                 </Link>
                 <div className="flex justify-end">
-                  <Votes
-                    currentDownvotes={answer.downvotes.length}
-                    currentUpvotes={answer.upvotes.length}
-                    itemId={JSON.stringify(answer._id)}
-                    type="answer"
-                    userDownVoted={answer.downvotes.includes(
-                      JSON.parse(userId)
-                    )}
-                    userUpVoted={answer.upvotes.includes(JSON.parse(userId))}
-                    userId={userId}
-                  />
+                  <SignedIn>
+                    <Votes
+                      currentDownvotes={answer.downvotes.length}
+                      currentUpvotes={answer.upvotes.length}
+                      itemId={JSON.stringify(answer._id)}
+                      type="answer"
+                      userDownVoted={userId ? answer.downvotes.includes(
+                        JSON.parse(userId)
+                      ) : false}
+                      userUpVoted={userId ? answer.upvotes.includes(JSON.parse(userId)) : false}
+                      userId={userId}
+                    />
+                  </SignedIn>
                 </div>
               </div>
             </div>

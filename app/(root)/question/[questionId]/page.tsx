@@ -8,7 +8,7 @@ import { getAnswers } from "@/lib/actions/answer.action";
 import { getQuestionById } from "@/lib/actions/question.action";
 import { getUserById } from "@/lib/actions/user.action";
 import { formatNumberWithExtension, getTimestamp } from "@/lib/utils";
-import { auth } from "@clerk/nextjs";
+import { SignedIn, auth } from "@clerk/nextjs";
 import Image from "next/image";
 import Link from "next/link";
 import React from "react";
@@ -49,16 +49,18 @@ const Page = async ({ params: { questionId } }: QuestionDetailPageProps) => {
             </p>
           </Link>
           <div className="flex justify-end">
-            <Votes
-              type="question"
-              itemId={JSON.stringify(question._id)}
-              userId={JSON.stringify(mongoUser._id)}
-              currentDownvotes={question.downvotes.length}
-              currentUpvotes={question.upvotes.length}
-              userUpVoted={question.upvotes.includes(mongoUser?._id)}
-              userDownVoted={question.downvotes.includes(mongoUser?._id)}
-              userSaved={mongoUser?.saved.includes(question._id)}
-            />
+            <SignedIn>
+              <Votes
+                type="question"
+                itemId={JSON.stringify(question._id)}
+                userId={JSON.stringify(mongoUser?._id)}
+                currentDownvotes={question.downvotes.length}
+                currentUpvotes={question.upvotes.length}
+                userUpVoted={question.upvotes.includes(mongoUser?._id)}
+                userDownVoted={question.downvotes.includes(mongoUser?._id)}
+                userSaved={mongoUser?.saved.includes(question._id)}
+              />
+            </SignedIn>
           </div>
         </div>
         <h2 className="h2-semibold text-dark200_light900 mt-3.5 w-full self-start">
@@ -99,14 +101,14 @@ const Page = async ({ params: { questionId } }: QuestionDetailPageProps) => {
 
       <AllAnswers
         questionId={question._id}
-        userId={JSON.stringify(mongoUser._id)}
+        userId={JSON.stringify(mongoUser?._id)}
         totalAnswers={answers.length}
       />
 
       <Answers
         question={question.content}
         questionId={JSON.stringify(question._id)}
-        authorId={JSON.stringify(mongoUser._id)}
+        authorId={JSON.stringify(mongoUser?._id)}
       />
     </>
   );
