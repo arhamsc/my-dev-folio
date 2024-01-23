@@ -23,9 +23,9 @@ const EditDeleteActions = ({
   const path = usePathname();
   const handleDelete = async (itemId: string) => {
     if (type === "question") {
-      deleteQuestion({ questionId: itemId, path });
+      deleteQuestion({ questionId: JSON.parse(itemId), path });
     } else if (type === "answer") {
-      deleteAnswer({ answerId: itemId, path });
+      deleteAnswer({ answerId: JSON.parse(itemId), path });
     }
   };
   return (

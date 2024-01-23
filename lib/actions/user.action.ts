@@ -18,6 +18,7 @@ import Question from "@/db/question.model";
 import path from "path";
 import Tag from "@/db/tag.model";
 import Answer from "@/db/answer.model";
+import { clerkClient } from "@clerk/nextjs/server";
 
 export async function getUsers(params: GetAllUsersParams) {
   try {
@@ -63,6 +64,14 @@ export async function updateUser(params: UpdateUserParams) {
     connectToDatabase();
 
     const { clerkId, path, updateData } = params;
+    const nameArray = updateData?.name?.split(" ");
+
+    await clerkClient.users.updateUser(clerkId, {
+      username: updateData.username,
+      firstName: nameArray?.[0] ?? "",
+      lastName: nameArray?.splice(-nameArray.length + 1).join(" ") ?? "",
+    });
+
     await User.findOneAndUpdate({ clerkId }, updateData, {
       new: true,
     });

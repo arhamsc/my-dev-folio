@@ -3,7 +3,6 @@ import React from "react";
 import RenderTag from "../RenderTag";
 import Metric from "../Metric";
 import { formatNumberWithExtension, getTimestamp } from "@/lib/utils";
-import Image from "next/image";
 import EditDeleteActions from "../EditDeleteActions";
 
 type QuestionCardProps = {
@@ -32,10 +31,10 @@ const QuestionCard = ({
   return (
     <div className="card-wrapper rounded-[10px] p-9 sm:px-11">
       <EditDeleteActions
-      authorClerkId={author.clerkId}
-      clerkId={clerkId}
-      itemId={_id}
-      type="question"
+        authorClerkId={author.clerkId}
+        clerkId={clerkId}
+        itemId={JSON.stringify(_id)}
+        type="question"
       />
       <div className="flex flex-col-reverse items-start justify-between gap-5 sm:flex-row">
         <div>

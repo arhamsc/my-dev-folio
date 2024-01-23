@@ -26,7 +26,7 @@ const AnswerCard = ({
       <EditDeleteActions
         authorClerkId={author.clerkId}
         clerkId={clerkId}
-        itemId={_id}
+        itemId={JSON.stringify(_id)}
         type="answer"
       />
       <div className="flex flex-col-reverse items-start justify-between gap-5 sm:flex-row">

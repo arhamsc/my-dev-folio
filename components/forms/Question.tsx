@@ -136,7 +136,7 @@ export function Question(props: QuestionProps) {
               </FormLabel>
               <FormControl className="mt-3.5">
                 <Input
-                  className="no-focus paragraph-regular background-light900_dark300 light-border-2 text-dark300_light700 min-h-[56px] border"
+                  className="no-focus paragraph-regular background-light700_dark300 light-border-2 text-dark300_light700 min-h-[56px] border"
                   {...field}
                 />
               </FormControl>
@@ -219,7 +219,7 @@ export function Question(props: QuestionProps) {
                   <>
                     <Input
                       placeholder="Add tags..."
-                      className="no-focus paragraph-regular background-light900_dark300 light-border-2 text-dark300_light700 min-h-[56px] border"
+                      className="no-focus paragraph-regular background-light700_dark300 light-border-2 text-dark300_light700 min-h-[56px] border"
                       disabled={field.disabled}
                       onKeyDown={(e) => handleInputKeyDown(e, field)}
                     />

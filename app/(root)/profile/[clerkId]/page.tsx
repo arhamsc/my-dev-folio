@@ -4,9 +4,8 @@ import QuestionTab from "@/components/shared/QuestionTab";
 import Stats from "@/components/shared/Stats";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { getUserById, getUserInfo } from "@/lib/actions/user.action";
+import { getUserInfo } from "@/lib/actions/user.action";
 import { formatDate } from "@/lib/utils";
-import { URLProps } from "@/types";
 import { SignedIn } from "@clerk/nextjs";
 import Image from "next/image";
 import Link from "next/link";
@@ -43,14 +42,14 @@ const Page = async ({
             </p>
 
             <div className="mt-5 flex flex-wrap items-center justify-start gap-5">
-              {user.user?.location && (
+              {user?.location && (
                 <ProfileLink
                   imgUrl={"/assets/icons/link.svg"}
                   href={user?.portfolioWebsite}
                   title="Portfolio"
                 />
               )}
-              {user.user?.location && (
+              {user?.location && (
                 <ProfileLink
                   imgUrl={"/assets/icons/location.svg"}
                   title={user?.location}
