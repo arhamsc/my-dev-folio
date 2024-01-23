@@ -12,10 +12,8 @@ import {
   GetUserStatsParams,
   UpdateUserParams,
 } from "./shared.types";
-import error from "next/error";
 import { revalidatePath } from "next/cache";
 import Question from "@/db/question.model";
-import path from "path";
 import Tag from "@/db/tag.model";
 import Answer from "@/db/answer.model";
 import { clerkClient } from "@clerk/nextjs/server";

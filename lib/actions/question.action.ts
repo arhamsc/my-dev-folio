@@ -14,7 +14,7 @@ import {
 } from "./shared.types";
 import User from "@/db/user.model";
 import { revalidatePath } from "next/cache";
-import {  Types } from "mongoose";
+import { Types } from "mongoose";
 import Answer from "@/db/answer.model";
 import Interaction from "@/db/interaction.model";
 
@@ -262,6 +262,47 @@ export async function deleteQuestion(params: DeleteQuestionParams) {
     );
     console.log({ questionId });
     revalidatePath(path);
+  } catch (error) {
+    console.log({ error });
+    throw error;
+  }
+}
+
+export async function getHotQuestions() {
+  try {
+    // const {} = params;
+    connectToDatabase();
+
+    const questions = await Question.aggregate([
+      {
+        $project: {
+          title: 1,
+          upvotes: 1,
+          views: 1,
+          createdAt: 1,
+          length: { $size: "$answers" },
+        },
+      },
+      {
+        $sort: {
+          upvotes: -1,
+          views: -1,
+          length: -1,
+          createdAt: -1,
+        },
+      },
+      {
+        $limit: 5,
+      },
+    ]);
+
+    // const questions = await Question.find({})
+    //   .sort({ upvotes: -1, views: -1 })
+    //   .select("_id title")
+    //   .populate({ path: "author", model: User })
+    //   .sort({ createdAt: -1 });
+
+    return { questions };
   } catch (error) {
     console.log({ error });
     throw error;
