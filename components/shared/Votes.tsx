@@ -1,15 +1,17 @@
 "use client";
 
 import Image from "next/image";
-import React from "react";
+import React, { useEffect } from "react";
 import { Button } from "../ui/button";
 import { formatNumberWithExtension } from "@/lib/utils";
 import {
   handleQuestionSave,
   handleQuestionVote,
 } from "@/lib/actions/question.action";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { handleAnswerVote } from "@/lib/actions/answer.action";
+import { viewQuestion } from "@/lib/actions/interaction.action";
+import { undefined } from "zod";
 
 interface VotesProps {
   type: "question" | "answer";
@@ -33,6 +35,7 @@ const Votes = ({
   userSaved,
 }: VotesProps) => {
   const path = usePathname();
+  const router = useRouter();
   const handleSave = async () => {
     await handleQuestionSave({
       path,
@@ -60,6 +63,14 @@ const Votes = ({
       });
     }
   };
+
+  useEffect(() => {
+    if (type === "question")
+      viewQuestion({
+        questionId: JSON.parse(itemId),
+        userId: userId ? JSON.parse(userId) : undefined,
+      });
+  }, [itemId, router, userId, path, type]);
   return (
     <div className="flex-center gap-5">
       <div className="flex-center gap-2.5">

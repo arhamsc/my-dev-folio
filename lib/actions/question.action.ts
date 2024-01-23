@@ -7,6 +7,7 @@ import {
   CreateQuestionParams,
   GetQuestionByIdParams,
   GetQuestionsParams,
+  GetSavedQuestionsParams,
   QuestionVoteParams,
   ToggleSaveQuestionParams,
 } from "./shared.types";
@@ -34,6 +35,8 @@ export async function getQuestions(params: GetQuestionsParams) {
     throw error;
   }
 }
+
+
 
 export async function getQuestionById(params: GetQuestionByIdParams) {
   try {
