@@ -1,9 +1,14 @@
 import Answers from "@/components/forms/Answers";
+import AllAnswers from "@/components/shared/AllAnswers";
 import Metric from "@/components/shared/Metric";
 import ParseHTML from "@/components/shared/ParseHTML";
 import RenderTag from "@/components/shared/RenderTag";
+import Votes from "@/components/shared/Votes";
+import { getAnswers } from "@/lib/actions/answer.action";
 import { getQuestionById } from "@/lib/actions/question.action";
+import { getUserById } from "@/lib/actions/user.action";
 import { formatNumberWithExtension, getTimestamp } from "@/lib/utils";
+import { auth } from "@clerk/nextjs";
 import Image from "next/image";
 import Link from "next/link";
 import React from "react";
@@ -16,6 +21,14 @@ interface QuestionDetailPageProps {
 
 const Page = async ({ params: { questionId } }: QuestionDetailPageProps) => {
   const { question } = await getQuestionById({ questionId });
+  const { answers } = await getAnswers({ questionId });
+  const { userId: clerkId } = auth();
+
+  let mongoUser;
+
+  if (clerkId) {
+    mongoUser = await getUserById({ userId: clerkId });
+  }
 
   return (
     <>
@@ -35,7 +48,18 @@ const Page = async ({ params: { questionId } }: QuestionDetailPageProps) => {
               {question.author.name}
             </p>
           </Link>
-          <div className="flex justify-end">Voting</div>
+          <div className="flex justify-end">
+            <Votes
+              type="question"
+              itemId={JSON.stringify(question._id)}
+              userId={JSON.stringify(mongoUser._id)}
+              currentDownvotes={question.downvotes.length}
+              currentUpvotes={question.upvotes.length}
+              userUpVoted={question.upvotes.includes(mongoUser?._id)}
+              userDownVoted={question.downvotes.includes(mongoUser?._id)}
+              userSaved={mongoUser?.saved.includes(question._id)}
+            />
+          </div>
         </div>
         <h2 className="h2-semibold text-dark200_light900 mt-3.5 w-full self-start">
           {question.title}
@@ -73,7 +97,17 @@ const Page = async ({ params: { questionId } }: QuestionDetailPageProps) => {
         ))}
       </div>
 
-      <Answers />
+      <AllAnswers
+        questionId={question._id}
+        userId={JSON.stringify(mongoUser._id)}
+        totalAnswers={answers.length}
+      />
+
+      <Answers
+        question={question.content}
+        questionId={JSON.stringify(question._id)}
+        authorId={JSON.stringify(mongoUser._id)}
+      />
     </>
   );
 };

@@ -1,105 +1,61 @@
 "use server";
-
-import Question from "@/db/question.model";
+import Answer from "@/db/answer.model";
 import { connectToDatabase } from "../mongoose";
-import Tag from "@/db/tag.model";
-import {
-  CreateQuestionParams,
-  GetQuestionByIdParams,
-  GetQuestionsParams,
-  QuestionVoteParams,
-  ToggleSaveQuestionParams,
-} from "./shared.types";
-import User from "@/db/user.model";
+import { AnswerVoteParams, CreateAnswerParams, GetAnswersParams } from "./shared.types";
 import { revalidatePath } from "next/cache";
-import path from "path";
-import { Schema, Types } from "mongoose";
+import Question from "@/db/question.model";
+import { Types } from "mongoose";
 
-export async function getQuestions(params: GetQuestionsParams) {
-  try {
-    // const {} = params;
-    connectToDatabase();
-
-    const questions = await Question.find({})
-      .populate({
-        path: "tags",
-        model: Tag,
-      })
-      .populate({ path: "author", model: User })
-      .sort({ createdAt: -1 });
-
-    return { questions };
-  } catch (error) {
-    console.log({ error });
-    throw error;
-  }
-}
-
-export async function getQuestionById(params: GetQuestionByIdParams) {
-  try {
-    // const {} = params;
-    connectToDatabase();
-    const { questionId } = params;
-    const question = await Question.findById(questionId)
-      .populate({
-        path: "tags",
-        model: Tag,
-        select: "_id name",
-      })
-      .populate({
-        path: "author",
-        model: User,
-        select: "_id clerkId name picture",
-      });
-
-    return { question };
-  } catch (error) {
-    console.log({ error });
-    throw error;
-  }
-}
-
-export async function createQuestion(params: CreateQuestionParams) {
+export async function createAnswer(params: CreateAnswerParams) {
   try {
     connectToDatabase();
-    const { title, content, tags, author, path } = params;
+    const { content, author, path, question } = params;
 
-    const question = await new Question({ title, content, author });
-    const tagDocuments = [];
+    const answer = await new Answer({ question, content, author });
 
-    for (const tag of tags) {
-      // console.log({question});
-      // return;
-      const existingTag = await Tag.findOneAndUpdate(
-        { name: { $regex: new RegExp(`^${tag}$`, "i") } },
-        { $setOnInsert: { name: tag }, $push: { questions: question._id } },
-        { upsert: true, new: true }
-      );
-      tagDocuments.push(existingTag._id);
-      question.tags.push(existingTag._id);
-    }
-    await question.save();
+    await Question.findByIdAndUpdate(question, {
+      $push: { answers: answer._id },
+    });
+
+    await answer.save();
 
     // Increment author's reputation
 
     // console.log(params);
     revalidatePath(path);
-  } catch (error) {}
+  } catch (error) {
+    console.log({ error });
+    throw error;
+  }
 }
 
-export async function handleQuestionVote(params: QuestionVoteParams) {
+export async function getAnswers(params: GetAnswersParams) {
   try {
     connectToDatabase();
-    const { hasdownVoted, hasupVoted, path, questionId, userId } = params;
+    const { questionId, page, pageSize, sortBy } = params;
+    const answers = await Answer.find({ question: questionId })
+      .populate("author", "_id clerkId name picture")
+      .sort({ createdAt: -1 });
+    return { answers };
+  } catch (error) {
+    console.log({ error });
+    throw error;
+  }
+}
+
+export async function handleAnswerVote(params: AnswerVoteParams) {
+  try {
+    connectToDatabase();
+    const { hasdownVoted, hasupVoted, path, answerId, userId } = params;
 
     // const question = await Question.findById(questionId);
     // const user = await User.findById(userId);
 
     // Below is the own solution with aggregation pipelines.
     if (hasupVoted) {
-      //  console.log({ questionId, userId });
-      //  return;
-      await Question.findByIdAndUpdate(questionId, [
+      // console.log({ answerId, userId });
+      // return;
+      await Answer.findByIdAndUpdate(answerId, [
         {
           $set: {
             upvotes: {
@@ -139,7 +95,7 @@ export async function handleQuestionVote(params: QuestionVoteParams) {
         },
       ]);
     } else if (hasdownVoted) {
-      await Question.findByIdAndUpdate(questionId, [
+      await Answer.findByIdAndUpdate(answerId, [
         {
           $set: {
             downvotes: {
@@ -181,42 +137,6 @@ export async function handleQuestionVote(params: QuestionVoteParams) {
     } else {
       return;
     }
-
-    revalidatePath(path);
-  } catch (error) {
-    console.log({ error });
-    throw error;
-  }
-}
-
-export async function handleQuestionSave(params: ToggleSaveQuestionParams) {
-  try {
-    connectToDatabase();
-    const { path, questionId, userId } = params;
-
-    await User.findByIdAndUpdate(userId, [
-      {
-        $set: {
-          saved: {
-            $cond: [
-              {
-                $in: [new Types.ObjectId(questionId), "$saved"],
-              },
-
-              {
-                $filter: {
-                  input: "$saved",
-                  cond: {
-                    $not: { $in: [new Types.ObjectId(questionId), "$saved"] },
-                  },
-                },
-              },
-              { $concatArrays: ["$saved", [new Types.ObjectId(questionId)]] },
-            ],
-          },
-        },
-      },
-    ]);
 
     revalidatePath(path);
   } catch (error) {
