@@ -3,7 +3,7 @@ import NoResult from "@/components/shared/NoResult";
 import QuestionCard from "@/components/shared/cards/QuestionCard";
 import Filter from "@/components/shared/filters/Filter";
 import LocalSearchbar from "@/components/shared/search/LocalSearchbar";
-import { defaultPageLimit } from "@/constants/constants";
+import { defaultPageLimit } from "@/constants";
 import { QuestionFilters } from "@/constants/filters";
 import { getSavedQuestions } from "@/lib/actions/user.action";
 import { CommonPageProps } from "@/types";

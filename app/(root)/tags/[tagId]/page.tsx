@@ -2,7 +2,7 @@ import QuestionCard from "@/components/shared/cards/QuestionCard";
 import MyPagination from "@/components/shared/MyPagination";
 import NoResult from "@/components/shared/NoResult";
 import LocalSearchbar from "@/components/shared/search/LocalSearchbar";
-import { defaultPageLimit } from "@/constants/constants";
+import { defaultPageLimit } from "@/constants";
 import { getQuestionsByTagId } from "@/lib/actions/tag.action";
 import { CommonPageProps } from "@/types";
 import { redirect } from "next/navigation";

@@ -3,7 +3,7 @@ import NoResult from "@/components/shared/NoResult";
 import TagCard from "@/components/shared/cards/TagCard";
 import Filter from "@/components/shared/filters/Filter";
 import LocalSearchbar from "@/components/shared/search/LocalSearchbar";
-import { defaultPageLimit } from "@/constants/constants";
+import { defaultPageLimit } from "@/constants";
 import { TagFilters } from "@/constants/filters";
 import { getAllTags } from "@/lib/actions/tag.action";
 import { CommonPageProps } from "@/types";

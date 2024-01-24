@@ -20,9 +20,14 @@
     "darkgradient",
     "darknone",
     "downvotes",
+    "hasdown",
+    "hasup",
+    "highestupvotes",
+    "lowestupvotes",
     "maxlength",
     "Seachbar",
     "Searchbar",
+    "upvoted",
     "Upvotes"
   ]
 }

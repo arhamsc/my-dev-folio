@@ -1,6 +1,6 @@
 "use server";
 
-import Question, { IQuestion } from "@/db/question.model";
+import Question from "@/db/question.model";
 import { connectToDatabase } from "../mongoose";
 import Tag from "@/db/tag.model";
 import {
@@ -14,14 +14,19 @@ import {
 } from "./shared.types";
 import User from "@/db/user.model";
 import { revalidatePath } from "next/cache";
-import { FilterQuery, PipelineStage, QueryOptions, Types } from "mongoose";
+import { PipelineStage, Types } from "mongoose";
 import Answer from "@/db/answer.model";
 import Interaction from "@/db/interaction.model";
-import { defaultPageLimit } from "@/constants/constants";
+import { defaultPageLimit } from "@/constants";
 
 export async function getQuestions(params: GetQuestionsParams) {
   try {
-    const { filter, page = 1, pageSize = defaultPageLimit, searchQuery } = params;
+    const {
+      filter,
+      page = 1,
+      pageSize = defaultPageLimit,
+      searchQuery,
+    } = params;
     connectToDatabase();
 
     const totalQuestions = await Question.countDocuments();
@@ -65,7 +70,11 @@ export async function getQuestions(params: GetQuestionsParams) {
       .limit(pageSize);
 
     const questions = await Question.populate(unpopulatedQuestions, [
-      { path: "author", model: User, select: "_id name picture username clerkId" },
+      {
+        path: "author",
+        model: User,
+        select: "_id name picture username clerkId",
+      },
       { path: "tags", model: Tag, select: "_id name" },
     ]);
 
@@ -109,8 +118,6 @@ export async function createQuestion(params: CreateQuestionParams) {
     const tagDocuments = [];
 
     for (const tag of tags) {
-      // console.log({question});
-      // return;
       const existingTag = await Tag.findOneAndUpdate(
         { name: { $regex: new RegExp(`^${tag}$`, "i") } },
         { $setOnInsert: { name: tag }, $push: { questions: question._id } },
@@ -121,11 +128,23 @@ export async function createQuestion(params: CreateQuestionParams) {
     }
     await question.save();
 
+    await Interaction.create({
+      question: question._id,
+      user: author,
+      action: "ask_question",
+      tags: tagDocuments,
+    });
+
     // Increment author's reputation
+
+    await User.findByIdAndUpdate(author, { $inc: { reputation: 5 } });
 
     // console.log(params);
     revalidatePath(path);
-  } catch (error) {}
+  } catch (error) {
+    console.log({ error });
+    throw error;
+  }
 }
 
 export async function editQuestion(params: EditQuestionParams) {
@@ -153,7 +172,11 @@ export async function handleQuestionVote(params: QuestionVoteParams) {
     connectToDatabase();
     const { hasdownVoted, hasupVoted, path, questionId, userId } = params;
 
-    // const question = await Question.findById(questionId);
+    const question = await Question.findById(questionId);
+
+    if (!question) {
+      throw new Error("Question not found");
+    }
     // const user = await User.findById(userId);
 
     // Below is the own solution with aggregation pipelines.
@@ -177,7 +200,7 @@ export async function handleQuestionVote(params: QuestionVoteParams) {
                     },
                   },
                 },
-                // When not upvoted, concat orignal array with userId
+                // When not upvoted, concat original array with userId
                 { $concatArrays: ["$upvotes", [new Types.ObjectId(userId)]] },
               ],
             },
@@ -217,7 +240,7 @@ export async function handleQuestionVote(params: QuestionVoteParams) {
                     },
                   },
                 },
-                // When not upvoted, concat orignal array with userId
+                // When not upvoted, concat original array with userId
                 { $concatArrays: ["$downvotes", [new Types.ObjectId(userId)]] },
               ],
             },
@@ -242,6 +265,14 @@ export async function handleQuestionVote(params: QuestionVoteParams) {
     } else {
       return;
     }
+
+    await User.findByIdAndUpdate(userId, {
+      $inc: { reputation: hasupVoted ? 1 : -1 },
+    });
+
+    await User.findByIdAndUpdate(question.author, {
+      $inc: { reputation: hasupVoted ? 10 : -10 },
+    });
 
     revalidatePath(path);
   } catch (error) {

@@ -17,7 +17,9 @@ import Question, { IQuestion } from "@/db/question.model";
 import Tag from "@/db/tag.model";
 import Answer from "@/db/answer.model";
 import { clerkClient } from "@clerk/nextjs/server";
-import { defaultPageLimit } from "@/constants/constants";
+import { defaultPageLimit } from "@/constants";
+import { BadgeCriteriaType } from "@/types";
+import { assignBadges } from "../utils";
 
 export async function getUsers(params: GetAllUsersParams) {
   try {
@@ -79,7 +81,7 @@ export async function getUserById(params: GetUserByIdParams) {
 export async function createUser(userData: CreateUserParams) {
   try {
     connectToDatabase();
-    const newUser = await User.create(userData);
+    await User.create(userData);
   } catch (error) {
     console.log({ error });
     throw error;
@@ -126,9 +128,7 @@ export async function deleteUser(params: DeleteUserParams) {
       throw new Error("User not found");
     }
 
-    const userQuestionIds = await Question.find({ author: user._id }).distinct(
-      "_id"
-    );
+    await Question.find({ author: user._id }).distinct("_id");
 
     // delete user questions
     await Question.deleteMany({ author: user._id });
@@ -192,20 +192,22 @@ export async function getSavedQuestions(params: GetSavedQuestionsParams) {
       },
     ]);
 
-    const user = await User.populate(unpopulatedUsers[0], [{
-      path: "saved",
-      match: query,
-      model: Question,
-      options: {
-        sort: questionSortFilter,
-        limit: pageSize,
-        skip: (page - 1) * pageSize,
+    const user = await User.populate(unpopulatedUsers[0], [
+      {
+        path: "saved",
+        match: query,
+        model: Question,
+        options: {
+          sort: questionSortFilter,
+          limit: pageSize,
+          skip: (page - 1) * pageSize,
+        },
+        populate: [
+          { path: "tags", model: Tag, select: "_id name" },
+          { path: "author", model: User, select: "_id clerkId name picture" },
+        ],
       },
-      populate: [
-        { path: "tags", model: Tag, select: "_id name" },
-        { path: "author", model: User, select: "_id clerkId name picture" },
-      ],
-    }]);
+    ]);
 
     if (!user) {
       throw new Error("User not found");
@@ -234,7 +236,58 @@ export async function getUserInfo(params: GetUserByIdParams) {
       author: user._id,
     });
 
-    return { user, totalQuestions, totalAnswers };
+    const [questionUpvotes] = await Question.aggregate([
+      { $match: { author: user._id } },
+      {
+        $project: {
+          _id: 0,
+          upvotes: { $size: "$upvotes" },
+        },
+      },
+      { $group: { _id: null, totalUpvotes: { $sum: "$upvotes" } } },
+    ]);
+    const [answerUpvotes] = await Answer.aggregate([
+      { $match: { author: user._id } },
+      {
+        $project: {
+          _id: 0,
+          upvotes: { $size: "$upvotes" },
+        },
+      },
+      { $group: { _id: null, totalUpvotes: { $sum: "$upvotes" } } },
+    ]);
+    const [questionViews] = await Question.aggregate([
+      { $match: { author: user._id } },
+
+      { $group: { _id: null, totalViews: { $sum: "$views" } } },
+    ]);
+
+    const criteria = [
+      {
+        type: "QUESTION_COUNT" as BadgeCriteriaType,
+        count: totalQuestions,
+      },
+      {
+        type: "ANSWER_COUNT" as BadgeCriteriaType,
+        count: totalAnswers,
+      },
+      {
+        type: "QUESTION_UPVOTES" as BadgeCriteriaType,
+        count: questionUpvotes?.totalUpvotes ?? 0,
+      },
+      {
+        type: "ANSWER_UPVOTES" as BadgeCriteriaType,
+        count: answerUpvotes?.totalUpvotes ?? 0,
+      },
+      {
+        type: "TOTAL_VIEWS" as BadgeCriteriaType,
+        count: questionViews?.totalViews ?? 0,
+      },
+    ];
+
+    const badgeCounts = assignBadges({ criteria });
+
+    return { user, totalQuestions, totalAnswers, badgeCounts, reputation: user.reputation ?? 0};
   } catch (error) {
     console.log({ error });
     throw error;
@@ -247,7 +300,7 @@ export async function getUserQuestions(params: GetUserStatsParams) {
     const { userId, page = 1, pageSize = defaultPageLimit } = params;
     const totalQuestions = await Question.countDocuments({ author: userId });
     const questions = await Question.find({ author: userId })
-      .sort({ views: -1, upvotes: -1 })
+      .sort({ createdAt: -1, views: -1, upvotes: -1 })
       .skip((page - 1) * pageSize)
       .limit(pageSize)
       .populate({

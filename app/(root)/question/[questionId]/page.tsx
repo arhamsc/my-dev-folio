@@ -4,7 +4,7 @@ import Metric from "@/components/shared/Metric";
 import ParseHTML from "@/components/shared/ParseHTML";
 import RenderTag from "@/components/shared/RenderTag";
 import Votes from "@/components/shared/Votes";
-import { defaultPageLimit } from "@/constants/constants";
+import { defaultPageLimit } from "@/constants";
 import { getQuestionById } from "@/lib/actions/question.action";
 import { getUserById } from "@/lib/actions/user.action";
 import { formatNumberWithExtension, getTimestamp } from "@/lib/utils";

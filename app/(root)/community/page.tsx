@@ -3,7 +3,7 @@ import NoResult from "@/components/shared/NoResult";
 import UserCard from "@/components/shared/cards/UserCard";
 import Filter from "@/components/shared/filters/Filter";
 import LocalSearchbar from "@/components/shared/search/LocalSearchbar";
-import { defaultPageLimit } from "@/constants/constants";
+import { defaultPageLimit } from "@/constants";
 import { UserFilters } from "@/constants/filters";
 import { getUsers } from "@/lib/actions/user.action";
 import { CommonPageProps } from "@/types";

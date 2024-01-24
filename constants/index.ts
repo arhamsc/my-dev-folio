@@ -6,7 +6,7 @@ export const themes = [
   { value: "system", label: "System", icon: "/assets/icons/computer.svg" },
 ];
 
-export const defaultPageLimit = 2;
+export const defaultPageLimit = 10;
 
 export const sidebarLinks: SidebarLink[] = [
   {

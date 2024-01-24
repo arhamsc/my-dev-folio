@@ -5,7 +5,7 @@ import QuestionCard from "@/components/shared/cards/QuestionCard";
 import Filter from "@/components/shared/filters/Filter";
 import LocalSearchbar from "@/components/shared/search/LocalSearchbar";
 import { Button } from "@/components/ui/button";
-import { defaultPageLimit } from "@/constants/constants";
+import { defaultPageLimit } from "@/constants";
 import { HomePageFilters } from "@/constants/filters";
 import { getQuestions } from "@/lib/actions/question.action";
 import { CommonPageProps } from "@/types";

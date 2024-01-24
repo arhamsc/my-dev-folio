@@ -10,7 +10,7 @@ import {
 
 import { useTheme } from "@/context/ThemeProvider";
 import Image from "next/image";
-import { themes } from "@/constants/constants";
+import { themes } from "@/constants";
 
 const Theme = () => {
   const { mode, setMode } = useTheme();

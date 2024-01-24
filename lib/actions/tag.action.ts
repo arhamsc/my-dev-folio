@@ -10,7 +10,7 @@ import {
 import Tag, { ITag } from "@/db/tag.model";
 import { FilterQuery, QueryOptions, Types } from "mongoose";
 import Question from "@/db/question.model";
-import { defaultPageLimit } from "@/constants/constants";
+import { defaultPageLimit } from "@/constants";
 
 export async function getTopInteractedTags(params: GetTopInteractedTagsParams) {
   try {
