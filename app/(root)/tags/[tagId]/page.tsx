@@ -1,25 +1,31 @@
 import QuestionCard from "@/components/shared/cards/QuestionCard";
+import MyPagination from "@/components/shared/MyPagination";
 import NoResult from "@/components/shared/NoResult";
 import LocalSearchbar from "@/components/shared/search/LocalSearchbar";
+import { defaultPageLimit } from "@/constants/constants";
 import { getQuestionsByTagId } from "@/lib/actions/tag.action";
+import { CommonPageProps } from "@/types";
 import { redirect } from "next/navigation";
-import result from "postcss/lib/result";
 
-interface TagsPageProps {
+interface TagsPageProps extends CommonPageProps {
   params: {
     tagId: string;
-  };
-  searchParams: {
-    q: string;
   };
 }
 
 const Page = async ({
   params: { tagId },
-  searchParams: { q },
+  searchParams: { q, page, pageLimit = defaultPageLimit.toString() },
 }: TagsPageProps) => {
   if (!tagId) redirect("/tags");
-  const { tag } = await getQuestionsByTagId({ tagId, page: 1, searchQuery: q });
+
+  const { tag } = await getQuestionsByTagId({
+    tagId,
+    page: +(page ?? 1),
+    searchQuery: q,
+    pageSize: +pageLimit,
+  });
+  console.log({ t: tag.totalQuestions });
   return (
     <>
       <h1 className="h1-bold text-dark100_light900 capitalize">{tag.name}</h1>
@@ -55,6 +61,9 @@ const Page = async ({
             linkTitle="Ask a Question"
           />
         )}
+      </div>
+      <div className="mt-4">
+        <MyPagination maxPages={Math.round(tag.totalQuestions / +pageLimit)} />
       </div>
     </>
   );

@@ -1,18 +1,26 @@
 import HomeFilters from "@/components/home/HomeFilters";
+import MyPagination from "@/components/shared/MyPagination";
 import NoResult from "@/components/shared/NoResult";
 import QuestionCard from "@/components/shared/cards/QuestionCard";
 import Filter from "@/components/shared/filters/Filter";
 import LocalSearchbar from "@/components/shared/search/LocalSearchbar";
 import { Button } from "@/components/ui/button";
+import { defaultPageLimit } from "@/constants/constants";
 import { HomePageFilters } from "@/constants/filters";
 import { getQuestions } from "@/lib/actions/question.action";
 import { CommonPageProps } from "@/types";
 import Link from "next/link";
 import React from "react";
 
-const Home = async ({ searchParams: { q, filter } }: CommonPageProps) => {
-  const result = await getQuestions({ searchQuery: q, filter });
-  // console.log(result.questions);
+const Home = async ({
+  searchParams: { q, filter, pageLimit, page },
+}: CommonPageProps) => {
+  const result = await getQuestions({
+    searchQuery: q,
+    filter,
+    page: +(page ?? 1),
+    pageSize: +(pageLimit ?? defaultPageLimit),
+  });
   return (
     <>
       <div className="flex w-full flex-col-reverse justify-between gap-4 sm:flex-row sm:items-center">
@@ -64,6 +72,11 @@ const Home = async ({ searchParams: { q, filter } }: CommonPageProps) => {
             linkTitle="Ask a Question"
           />
         )}
+      </div>
+      <div className="mt-4">
+        <MyPagination
+          maxPages={Math.round(result.totalQuestions / +(pageLimit ?? 2))}
+        />
       </div>
     </>
   );

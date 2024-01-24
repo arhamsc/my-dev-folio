@@ -1,7 +1,9 @@
+import MyPagination from "@/components/shared/MyPagination";
 import NoResult from "@/components/shared/NoResult";
 import QuestionCard from "@/components/shared/cards/QuestionCard";
 import Filter from "@/components/shared/filters/Filter";
 import LocalSearchbar from "@/components/shared/search/LocalSearchbar";
+import { defaultPageLimit } from "@/constants/constants";
 import { QuestionFilters } from "@/constants/filters";
 import { getSavedQuestions } from "@/lib/actions/user.action";
 import { CommonPageProps } from "@/types";
@@ -9,12 +11,22 @@ import { auth } from "@clerk/nextjs";
 import { redirect } from "next/navigation";
 import React from "react";
 
-const Home = async ({ searchParams: { q, filter } }: CommonPageProps) => {
+const Home = async ({
+  searchParams: { q, filter, page, pageLimit = defaultPageLimit.toString() },
+}: CommonPageProps) => {
   const { userId: clerkId } = auth();
 
   if (!clerkId) redirect("/sign-in");
 
-  const result = await getSavedQuestions({ clerkId, searchQuery: q, filter });
+  const {
+    user: { saved, totalSaved },
+  } = await getSavedQuestions({
+    clerkId,
+    searchQuery: q,
+    filter,
+    page: +(page ?? 1),
+    pageSize: +pageLimit,
+  });
 
   return (
     <>
@@ -37,8 +49,8 @@ const Home = async ({ searchParams: { q, filter } }: CommonPageProps) => {
       </div>
 
       <div className="mt-10 flex w-full flex-col gap-6">
-        {result.questions.length > 0 ? (
-          result.questions.map((question: any) => (
+        {saved.length > 0 ? (
+          saved.map((question: any) => (
             <QuestionCard
               key={question._id}
               _id={question._id}
@@ -59,6 +71,9 @@ const Home = async ({ searchParams: { q, filter } }: CommonPageProps) => {
             linkTitle="Go to Home"
           />
         )}
+      </div>
+      <div className="mt-4">
+        <MyPagination maxPages={Math.round(totalSaved / +pageLimit)} />
       </div>
     </>
   );

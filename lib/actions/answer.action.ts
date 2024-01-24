@@ -11,6 +11,7 @@ import { revalidatePath } from "next/cache";
 import Question from "@/db/question.model";
 import { Query, QueryOptions, Types } from "mongoose";
 import Interaction from "@/db/interaction.model";
+import { defaultPageLimit } from "@/constants/constants";
 
 export async function createAnswer(params: CreateAnswerParams) {
   try {
@@ -38,7 +39,12 @@ export async function createAnswer(params: CreateAnswerParams) {
 export async function getAnswers(params: GetAnswersParams) {
   try {
     connectToDatabase();
-    const { questionId, page = 1, pageSize = 10, sortBy } = params;
+    const {
+      questionId,
+      page = 1,
+      pageSize = defaultPageLimit,
+      sortBy,
+    } = params;
     const sortByFilters: QueryOptions<IAnswer> = {};
 
     if (!sortBy) {
@@ -60,13 +66,14 @@ export async function getAnswers(params: GetAnswersParams) {
       }
     }
 
+    const totalAnswers = await Answer.countDocuments({ question: questionId });
     const answers = await Answer.find({ question: questionId })
       .populate("author", "_id clerkId name picture")
       .skip((page - 1) * pageSize)
       .limit(pageSize)
       .sort(sortByFilters);
 
-    return { answers };
+    return { answers, totalAnswers };
   } catch (error) {
     console.log({ error });
     throw error;

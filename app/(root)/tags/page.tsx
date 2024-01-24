@@ -1,16 +1,24 @@
+import MyPagination from "@/components/shared/MyPagination";
 import NoResult from "@/components/shared/NoResult";
 import TagCard from "@/components/shared/cards/TagCard";
-import UserCard from "@/components/shared/cards/UserCard";
 import Filter from "@/components/shared/filters/Filter";
 import LocalSearchbar from "@/components/shared/search/LocalSearchbar";
-import { TagFilters, UserFilters } from "@/constants/filters";
+import { defaultPageLimit } from "@/constants/constants";
+import { TagFilters } from "@/constants/filters";
 import { getAllTags } from "@/lib/actions/tag.action";
 import { CommonPageProps } from "@/types";
 import React from "react";
 
-const Page = async ({ searchParams: { q, filter } }: CommonPageProps) => {
-  const { tags } = await getAllTags({ searchQuery: q, filter });
-  // console.log(users);
+const Page = async ({
+  searchParams: { q, filter, page, pageLimit = defaultPageLimit.toString() },
+}: CommonPageProps) => {
+  const { tags, totalTags } = await getAllTags({
+    searchQuery: q,
+    filter,
+    page: +(page ?? 1),
+    pageSize: +pageLimit,
+  });
+
   return (
     <>
       <h1 className="h1-bold text-dark100_light900">All Tags</h1>
@@ -51,6 +59,9 @@ const Page = async ({ searchParams: { q, filter } }: CommonPageProps) => {
           </>
         )}
       </section>
+      <div className="mt-4">
+        <MyPagination maxPages={Math.round(totalTags / +pageLimit)} />
+      </div>
     </>
   );
 };

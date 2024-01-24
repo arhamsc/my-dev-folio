@@ -1,6 +1,6 @@
 "use server";
 
-import { FilterQuery, Query, QueryOptions } from "mongoose";
+import { FilterQuery, QueryOptions } from "mongoose";
 import User from "@/db/user.model";
 import { connectToDatabase } from "../mongoose";
 import {
@@ -17,12 +17,17 @@ import Question, { IQuestion } from "@/db/question.model";
 import Tag from "@/db/tag.model";
 import Answer from "@/db/answer.model";
 import { clerkClient } from "@clerk/nextjs/server";
-import page from "@/app/(root)/(home)/page";
+import { defaultPageLimit } from "@/constants/constants";
 
 export async function getUsers(params: GetAllUsersParams) {
   try {
     connectToDatabase();
-    const { filter, page = 1, pageSize = 20, searchQuery } = params;
+    const {
+      filter,
+      page = 1,
+      pageSize = defaultPageLimit,
+      searchQuery,
+    } = params;
     const sortQuery: QueryOptions = { joinedAt: -1 };
 
     switch (filter?.toLowerCase()) {
@@ -36,6 +41,7 @@ export async function getUsers(params: GetAllUsersParams) {
         sortQuery.reputation = -1;
         break;
     }
+    const totalUsers = await User.countDocuments();
 
     const users = await User.find({})
       .or([
@@ -45,8 +51,8 @@ export async function getUsers(params: GetAllUsersParams) {
       .skip((page - 1) * pageSize)
       .limit(pageSize)
       .sort(sortQuery);
-    console.log({ users });
-    return { users };
+    // console.log({ users });
+    return { users, totalUsers };
   } catch (error) {
     console.log({ error });
     throw error;
@@ -138,7 +144,13 @@ export async function deleteUser(params: DeleteUserParams) {
 
 export async function getSavedQuestions(params: GetSavedQuestionsParams) {
   try {
-    const { clerkId, filter, page = 1, pageSize = 10, searchQuery } = params;
+    const {
+      clerkId,
+      filter,
+      page = 1,
+      pageSize = defaultPageLimit,
+      searchQuery,
+    } = params;
     connectToDatabase();
 
     const query: FilterQuery<typeof Question> = searchQuery
@@ -170,8 +182,17 @@ export async function getSavedQuestions(params: GetSavedQuestionsParams) {
     if (!filter) {
       questionSortFilter.createdAt = -1;
     }
-    
-    const user = await User.findOne({ clerkId }).populate({
+
+    const unpopulatedUsers = await User.aggregate([
+      { $match: { clerkId } },
+      {
+        $addFields: {
+          totalSaved: { $size: "$saved" },
+        },
+      },
+    ]);
+
+    const user = await User.populate(unpopulatedUsers[0], [{
       path: "saved",
       match: query,
       model: Question,
@@ -184,12 +205,13 @@ export async function getSavedQuestions(params: GetSavedQuestionsParams) {
         { path: "tags", model: Tag, select: "_id name" },
         { path: "author", model: User, select: "_id clerkId name picture" },
       ],
-    });
+    }]);
+
     if (!user) {
       throw new Error("User not found");
     }
 
-    return { questions: user.saved };
+    return { user };
   } catch (error) {
     console.log({ error });
     throw error;
@@ -222,7 +244,7 @@ export async function getUserInfo(params: GetUserByIdParams) {
 export async function getUserQuestions(params: GetUserStatsParams) {
   try {
     connectToDatabase();
-    const { userId, page = 1, pageSize = 10 } = params;
+    const { userId, page = 1, pageSize = defaultPageLimit } = params;
     const totalQuestions = await Question.countDocuments({ author: userId });
     const questions = await Question.find({ author: userId })
       .sort({ views: -1, upvotes: -1 })
@@ -248,7 +270,7 @@ export async function getUserQuestions(params: GetUserStatsParams) {
 export async function getUserAnswers(params: GetUserStatsParams) {
   try {
     connectToDatabase();
-    const { userId, page = 1, pageSize = 10 } = params;
+    const { userId, page = 1, pageSize = defaultPageLimit } = params;
     const totalAnswers = await Answer.countDocuments({ author: userId });
     const answers = await Answer.find({ author: userId })
       .sort({ upvotes: -1 })

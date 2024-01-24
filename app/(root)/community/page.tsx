@@ -1,16 +1,22 @@
+import MyPagination from "@/components/shared/MyPagination";
 import NoResult from "@/components/shared/NoResult";
 import UserCard from "@/components/shared/cards/UserCard";
 import Filter from "@/components/shared/filters/Filter";
 import LocalSearchbar from "@/components/shared/search/LocalSearchbar";
+import { defaultPageLimit } from "@/constants/constants";
 import { UserFilters } from "@/constants/filters";
 import { getUsers } from "@/lib/actions/user.action";
 import { CommonPageProps } from "@/types";
 import React from "react";
 
-const Page = async ({ searchParams: { q, filter } }: CommonPageProps) => {
-  const { users } = await getUsers({
+const Page = async ({
+  searchParams: { q, filter, page, pageLimit = defaultPageLimit.toString() },
+}: CommonPageProps) => {
+  const { users, totalUsers } = await getUsers({
     searchQuery: q,
     filter,
+    page: +(page ?? 1),
+    pageSize: +pageLimit,
   });
   return (
     <>
@@ -63,6 +69,9 @@ const Page = async ({ searchParams: { q, filter } }: CommonPageProps) => {
           </>
         )}
       </section>
+      <div className="mt-4">
+        <MyPagination maxPages={Math.round(totalUsers / +pageLimit)} />
+      </div>
     </>
   );
 };

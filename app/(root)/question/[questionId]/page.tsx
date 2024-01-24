@@ -4,7 +4,7 @@ import Metric from "@/components/shared/Metric";
 import ParseHTML from "@/components/shared/ParseHTML";
 import RenderTag from "@/components/shared/RenderTag";
 import Votes from "@/components/shared/Votes";
-import { getAnswers } from "@/lib/actions/answer.action";
+import { defaultPageLimit } from "@/constants/constants";
 import { getQuestionById } from "@/lib/actions/question.action";
 import { getUserById } from "@/lib/actions/user.action";
 import { formatNumberWithExtension, getTimestamp } from "@/lib/utils";
@@ -22,10 +22,9 @@ interface QuestionDetailPageProps extends CommonPageProps {
 
 const Page = async ({
   params: { questionId },
-  searchParams: { filter },
+  searchParams: { filter, page, pageLimit = defaultPageLimit.toString() },
 }: QuestionDetailPageProps) => {
   const { question } = await getQuestionById({ questionId });
-  const { answers } = await getAnswers({ questionId });
   const { userId: clerkId } = auth();
 
   let mongoUser;
@@ -106,8 +105,9 @@ const Page = async ({
       <AllAnswers
         questionId={question._id}
         userId={JSON.stringify(mongoUser?._id)}
-        totalAnswers={answers.length}
         filter={filter}
+        page={+(page ?? 1)}
+        pageLimit={+pageLimit}
       />
 
       <Answers

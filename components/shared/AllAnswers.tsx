@@ -8,11 +8,11 @@ import { getTimestamp } from "@/lib/utils";
 import ParseHTML from "./ParseHTML";
 import Votes from "./Votes";
 import { SignedIn } from "@clerk/nextjs";
+import MyPagination from "./MyPagination";
 
 interface AllAnswersProps {
   questionId: string;
   userId: string;
-  totalAnswers: number;
   page?: number;
   filter?: string;
   pageLimit?: number;
@@ -20,13 +20,14 @@ interface AllAnswersProps {
 
 const AllAnswers = async ({
   questionId,
-  totalAnswers,
   userId,
   page,
   filter,
   pageLimit,
 }: AllAnswersProps) => {
-  const { answers } = await getAnswers({ questionId, sortBy: filter });
+
+  const { answers, totalAnswers } = await getAnswers({ questionId, sortBy: filter, page, pageSize: pageLimit, });
+
   return (
     <div className="mt-11">
       <div className="flex items-center justify-between">
@@ -86,6 +87,9 @@ const AllAnswers = async ({
             <ParseHTML data={answer.content} />
           </article>
         ))}
+      </div>
+      <div className="mt-4">
+        <MyPagination maxPages={Math.round(totalAnswers / pageLimit!)} />
       </div>
     </div>
   );

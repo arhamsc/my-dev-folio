@@ -8,8 +8,9 @@ import {
   GetTopInteractedTagsParams,
 } from "./shared.types";
 import Tag, { ITag } from "@/db/tag.model";
-import { FilterQuery, QueryOptions } from "mongoose";
+import { FilterQuery, QueryOptions, Types } from "mongoose";
 import Question from "@/db/question.model";
+import { defaultPageLimit } from "@/constants/constants";
 
 export async function getTopInteractedTags(params: GetTopInteractedTagsParams) {
   try {
@@ -29,8 +30,16 @@ export async function getTopInteractedTags(params: GetTopInteractedTagsParams) {
 export async function getAllTags(params: GetAllTagsParams) {
   try {
     await connectToDatabase();
-    const { filter, page = 1, pageSize = 10, searchQuery } = params;
+    const {
+      filter,
+      page = 1,
+      pageSize = defaultPageLimit,
+      searchQuery,
+    } = params;
     const sortFilter: QueryOptions<ITag> = {};
+
+    // TODO: When filter is active then, make sure the count is also filtered number of total docs
+    const totalTags = await Tag.countDocuments();
 
     if (!filter) {
       sortFilter.createdOn = -1;
@@ -63,7 +72,7 @@ export async function getAllTags(params: GetAllTagsParams) {
 
     // if (!user) throw new Error("User not found");
 
-    return { tags };
+    return { tags, totalTags };
   } catch (error) {
     console.log({ error });
     throw error;
@@ -74,23 +83,37 @@ export async function getQuestionsByTagId(params: GetQuestionsByTagIdParams) {
   try {
     await connectToDatabase();
 
-    const { tagId, page = 1, pageSize = 10, searchQuery } = params;
+    const {
+      tagId,
+      page = 1,
+      pageSize = defaultPageLimit,
+      searchQuery,
+    } = params;
 
-    const tagFilter: FilterQuery<ITag> = { _id: tagId };
-    const tag = await Tag.findOne(tagFilter).populate({
-      path: "questions",
-      match: searchQuery
-        ? { title: { $regex: searchQuery, $options: "i" } }
-        : {},
-      model: Question,
-      options: {
-        sort: { createdAt: -1 },
+    const tagFilter: FilterQuery<ITag> = { _id: new Types.ObjectId(tagId) };
+    const unpopulatedTags = await Tag.aggregate([
+      { $match: tagFilter },
+      { $addFields: { totalQuestions: { $size: "$questions" } } },
+    ]);
+
+    const tag = await Tag.populate(unpopulatedTags[0], [
+      {
+        path: "questions",
+        match: searchQuery
+          ? { title: { $regex: searchQuery, $options: "i" } }
+          : {},
+        model: Question,
+        options: {
+          sort: { createdAt: -1 },
+          limit: pageSize,
+          skip: (page - 1) * pageSize,
+        },
+        populate: [
+          { path: "tags", model: Tag, select: "_id name" },
+          { path: "author", model: User, select: "_id clerkId name picture" },
+        ],
       },
-      populate: [
-        { path: "tags", model: Tag, select: "_id name" },
-        { path: "author", model: User, select: "_id clerkId name picture" },
-      ],
-    });
+    ]);
 
     if (!tag) throw new Error("Tag not found");
 

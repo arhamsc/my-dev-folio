@@ -17,11 +17,14 @@ import { revalidatePath } from "next/cache";
 import { FilterQuery, PipelineStage, QueryOptions, Types } from "mongoose";
 import Answer from "@/db/answer.model";
 import Interaction from "@/db/interaction.model";
+import { defaultPageLimit } from "@/constants/constants";
 
 export async function getQuestions(params: GetQuestionsParams) {
   try {
-    const { filter, page = 1, pageSize = 10, searchQuery } = params;
+    const { filter, page = 1, pageSize = defaultPageLimit, searchQuery } = params;
     connectToDatabase();
+
+    const totalQuestions = await Question.countDocuments();
 
     let pipeline: PipelineStage[] = [];
 
@@ -66,7 +69,7 @@ export async function getQuestions(params: GetQuestionsParams) {
       { path: "tags", model: Tag, select: "_id name" },
     ]);
 
-    return { questions };
+    return { questions, totalQuestions };
   } catch (error) {
     console.log({ error });
     throw error;
