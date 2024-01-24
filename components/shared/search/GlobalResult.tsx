@@ -6,6 +6,7 @@ import Link from "next/link";
 import Image from "next/image";
 import GlobalFilters from "./GlobalFilters";
 import { globalSearch } from "@/lib/actions/general.action";
+import { toast } from "@/components/ui/use-toast";
 
 const GlobalResult = () => {
   const searchParams = useSearchParams();
@@ -23,9 +24,12 @@ const GlobalResult = () => {
       try {
         const res = await globalSearch({ query: global, type });
         setGlobalResult(JSON.parse(res));
-      } catch (error) {
-        console.log({ error });
-        throw error;
+      } catch (error: any) {
+        toast({
+          title: "Error searching globally",
+          description: error.message ?? "Something went wrong",
+          variant: "destructive",
+        });
       } finally {
         setIsLoading(false);
       }

@@ -9,7 +9,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { formUrlQuery, removeKeysFromQuery } from "@/lib/utils";
+import { formUrlQuery } from "@/lib/utils";
 
 type TFilter = {
   name: string;
@@ -24,7 +24,6 @@ type FilterProps = {
 
 const Filter = ({ filter, containerClasses, otherClasses }: FilterProps) => {
   const router = useRouter();
-  const pathname = usePathname();
   const searchParams = useSearchParams();
 
   const query = searchParams.get("filter");
@@ -58,10 +57,13 @@ const Filter = ({ filter, containerClasses, otherClasses }: FilterProps) => {
             <SelectValue placeholder="Select a filter" />
           </div>
         </SelectTrigger>
-        <SelectContent>
+        <SelectContent className="text-dark500_light700 small-regular border-none bg-light-900 dark:bg-dark-300">
           <SelectGroup>
             {filter.map((f) => (
-              <SelectItem key={f.value} value={f.value}>
+              <SelectItem
+                key={f.value}
+                value={f.value}
+                className="cursor-pointer focus:bg-light-800 dark:focus:bg-dark-400">
                 {f.name}
               </SelectItem>
             ))}

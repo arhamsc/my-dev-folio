@@ -30,35 +30,57 @@ export async function globalSearch(params: SearchParams) {
 
     const typeLower = type?.toLowerCase();
 
-    if(!typeLower || !SearchableTypes.includes(typeLower)) {
+    if (!typeLower || !SearchableTypes.includes(typeLower)) {
       // Search all
 
       for (const modelInfo of modelsAndType) {
-        const queryResults = await modelInfo.model.find({
-          [modelInfo.searchField]: regex,
-        }).limit(8);
+        const queryResults = await modelInfo.model
+          .find({
+            [modelInfo.searchField]: regex,
+          })
+          .limit(8);
 
-        results = results.concat(queryResults.map((r) => ({
-          title: modelInfo.type === "answer" ?  `Answers containing ${query}` : r[modelInfo.searchField],
-          type: modelInfo.type,
-          id: modelInfo.type === "user" ? r.clerkId : modelInfo.type === "answer" ? r.question : r._id,
-        })));
+        results = results.concat(
+          queryResults.map((r) => ({
+            title:
+              modelInfo.type === "answer"
+                ? `Answers containing ${query}`
+                : r[modelInfo.searchField],
+            type: modelInfo.type,
+            id:
+              modelInfo.type === "user"
+                ? r.clerkId
+                : modelInfo.type === "answer"
+                  ? r.question
+                  : r._id,
+          }))
+        );
       }
     } else {
       // Search specific type
       const modelInfo = modelsAndType.find((m) => m.type === typeLower);
-      if(!modelInfo) {
-        throw new Error('Invalid search type');
+      if (!modelInfo) {
+        throw new Error("Invalid search type");
       }
 
-      const queryResults = await modelInfo.model.find({
-        [modelInfo.searchField]: regex,
-      }).limit(8);
+      const queryResults = await modelInfo.model
+        .find({
+          [modelInfo.searchField]: regex,
+        })
+        .limit(8);
 
       results = queryResults.map((r) => ({
-        title: typeLower === "answer" ?  `Answers containing ${query}` : r[modelInfo.searchField],
+        title:
+          typeLower === "answer"
+            ? `Answers containing ${query}`
+            : r[modelInfo.searchField],
         type: modelInfo.type,
-        id: typeLower === "user" ? r.clerkId : type === "answer" ? r.question : r._id,
+        id:
+          typeLower === "user"
+            ? r.clerkId
+            : type === "answer"
+              ? r.question
+              : r._id,
       }));
     }
 

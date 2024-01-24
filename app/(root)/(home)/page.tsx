@@ -5,24 +5,48 @@ import QuestionCard from "@/components/shared/cards/QuestionCard";
 import Filter from "@/components/shared/filters/Filter";
 import LocalSearchbar from "@/components/shared/search/LocalSearchbar";
 import { Button } from "@/components/ui/button";
+import { toast } from "@/components/ui/use-toast";
 import { defaultPageLimit } from "@/constants";
 import { HomePageFilters } from "@/constants/filters";
-import { getQuestions } from "@/lib/actions/question.action";
+import {
+  getQuestions,
+  getRecommendedQuestions,
+} from "@/lib/actions/question.action";
 import { CommonPageProps } from "@/types";
 import { auth } from "@clerk/nextjs";
 import Link from "next/link";
 import React from "react";
 
 const Home = async ({
-  searchParams: { q, filter, pageLimit, page },
+  searchParams: { q, filter, pageLimit = defaultPageLimit.toString(), page },
 }: CommonPageProps) => {
   const { userId } = auth();
-  const result = await getQuestions({
-    searchQuery: q,
-    filter,
-    page: +(page ?? 1),
-    pageSize: +(pageLimit ?? defaultPageLimit),
-  });
+
+  let result;
+
+  if (filter === "recommended") {
+    if (userId) {
+      result = await getRecommendedQuestions({
+        searchQuery: q,
+        userId,
+        page: +(page ?? 1),
+        pageSize: +(pageLimit ?? defaultPageLimit),
+      });
+    } else {
+      toast({
+        title: "Please login to see recommended questions",
+        variant: "destructive",
+      });
+      result = { questions: [], totalQuestions: 0 };
+    }
+  } else {
+    result = await getQuestions({
+      searchQuery: q,
+      filter,
+      page: +(page ?? 1),
+      pageSize: +(pageLimit ?? defaultPageLimit),
+    });
+  }
 
   return (
     <>
@@ -78,7 +102,7 @@ const Home = async ({
       </div>
       <div className="mt-4">
         <MyPagination
-          maxPages={Math.round(result.totalQuestions / +(pageLimit ?? 2))}
+          maxPages={Math.round(result.totalQuestions / +pageLimit)}
         />
       </div>
     </>

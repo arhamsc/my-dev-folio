@@ -61,6 +61,7 @@ export function Question(props: QuestionProps) {
     if (props.type === "edit") {
       form.setValue("tags", props.questionDetails.tags);
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleInputKeyDown = (

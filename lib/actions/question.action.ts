@@ -10,11 +10,12 @@ import {
   GetQuestionByIdParams,
   GetQuestionsParams,
   QuestionVoteParams,
+  RecommendedParams,
   ToggleSaveQuestionParams,
 } from "./shared.types";
 import User from "@/db/user.model";
 import { revalidatePath } from "next/cache";
-import { PipelineStage, Types } from "mongoose";
+import { FilterQuery, PipelineStage, Types } from "mongoose";
 import Answer from "@/db/answer.model";
 import Interaction from "@/db/interaction.model";
 import { defaultPageLimit } from "@/constants";
@@ -372,6 +373,78 @@ export async function getHotQuestions() {
     //   .sort({ createdAt: -1 });
 
     return { questions };
+  } catch (error) {
+    console.log({ error });
+    throw error;
+  }
+}
+
+export async function getRecommendedQuestions(params: RecommendedParams) {
+  try {
+    await connectToDatabase();
+
+    const {
+      userId,
+      page = 1,
+      pageSize = defaultPageLimit,
+      searchQuery,
+    } = params;
+
+    const user = await User.findOne({ clerkId: userId });
+
+    if (!user) {
+      throw new Error("User not found");
+    }
+
+    const skipAmount = (page - 1) * pageSize;
+
+    const userInteraction = await Interaction.find({ user: user._id })
+      .populate("tags")
+      .exec();
+
+    const userTags = userInteraction.reduce((tags, interaction) => {
+      if (interaction.tags) {
+        tags = tags.concat(interaction.tags);
+      }
+      return tags;
+    }, []);
+
+    const distinctUserTagIds: string[] = Array.from(
+      new Set<string>(userTags.map((tag: any) => tag._id))
+    );
+
+    const query: FilterQuery<typeof Question> = {
+      $and: [
+        {
+          tags: { $in: distinctUserTagIds },
+        },
+        { author: { $ne: user._id } },
+      ],
+    };
+
+    if (searchQuery) {
+      query.$or = [
+        { title: { $regex: new RegExp(searchQuery ?? "", "i") } },
+        { content: { $regex: new RegExp(searchQuery ?? "", "i") } },
+      ];
+    }
+
+    const totalQuestions = await Question.countDocuments(query);
+
+    const recommendedQuestions = await Question.find(query)
+      .populate({
+        path: "tags",
+        model: Tag,
+      })
+      .populate({
+        path: "author",
+        model: User,
+        select: "_id name picture username clerkId",
+      })
+      .skip(skipAmount)
+      .limit(pageSize);
+
+    return { questions: recommendedQuestions, totalQuestions };
   } catch (error) {
     console.log({ error });
     throw error;

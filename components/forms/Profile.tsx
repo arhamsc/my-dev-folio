@@ -17,6 +17,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { updateUser } from "@/lib/actions/user.action";
 import { Button } from "../ui/button";
 import { Textarea } from "../ui/textarea";
+import { toast } from "../ui/use-toast";
 
 type EditProfileProps = {
   user: {
@@ -57,9 +58,17 @@ const Profile = ({ clerkId, mongoUserId, user }: EditProfileProps) => {
           ...values,
         },
       });
+
+      toast({
+        title: "Profile updated successfully",
+      });
       router.push(`/profile/${clerkId}`);
-    } catch (error) {
-      console.log({ error });
+    } catch (error: any) {
+      toast({
+        title: "Something went wrong",
+        variant: "destructive",
+        description: error.message ?? "Please try again later",
+      });
     }
   };
 

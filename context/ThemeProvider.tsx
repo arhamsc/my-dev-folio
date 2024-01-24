@@ -35,7 +35,6 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     handleThemeChange();
-    console.log({ mode });
   }, [mode]);
 
   return (

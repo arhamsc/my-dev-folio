@@ -29,7 +29,7 @@ export async function POST(request: Request) {
     const reply = responseData.choices[0].message.content;
     return NextResponse.json({ reply });
   } catch (error: any) {
-    console.log({ error });
+    // // console.log({ error });
     return NextResponse.json({ error: error.message });
   }
 }
