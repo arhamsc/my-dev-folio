@@ -1,5 +1,5 @@
 "use server";
-import Answer from "@/db/answer.model";
+import Answer, { IAnswer } from "@/db/answer.model";
 import { connectToDatabase } from "../mongoose";
 import {
   AnswerVoteParams,
@@ -9,7 +9,7 @@ import {
 } from "./shared.types";
 import { revalidatePath } from "next/cache";
 import Question from "@/db/question.model";
-import { Types } from "mongoose";
+import { Query, QueryOptions, Types } from "mongoose";
 import Interaction from "@/db/interaction.model";
 
 export async function createAnswer(params: CreateAnswerParams) {
@@ -38,10 +38,34 @@ export async function createAnswer(params: CreateAnswerParams) {
 export async function getAnswers(params: GetAnswersParams) {
   try {
     connectToDatabase();
-    const { questionId, page, pageSize, sortBy } = params;
+    const { questionId, page = 1, pageSize = 10, sortBy } = params;
+    const sortByFilters: QueryOptions<IAnswer> = {};
+
+    if (!sortBy) {
+      sortByFilters.createdAt = -1;
+    } else {
+      switch (sortBy?.toLowerCase()) {
+        case "highestupvotes":
+          sortByFilters.upvotes = -1;
+          break;
+        case "lowestupvotes":
+          sortByFilters.downvotes = -1;
+          break;
+        case "recent":
+          sortByFilters.createdAt = -1;
+          break;
+        case "old":
+          sortByFilters.createdAt = 1;
+          break;
+      }
+    }
+
     const answers = await Answer.find({ question: questionId })
       .populate("author", "_id clerkId name picture")
-      .sort({ createdAt: -1 });
+      .skip((page - 1) * pageSize)
+      .limit(pageSize)
+      .sort(sortByFilters);
+
     return { answers };
   } catch (error) {
     console.log({ error });

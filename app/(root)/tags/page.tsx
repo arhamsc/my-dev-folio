@@ -3,14 +3,13 @@ import TagCard from "@/components/shared/cards/TagCard";
 import UserCard from "@/components/shared/cards/UserCard";
 import Filter from "@/components/shared/filters/Filter";
 import LocalSearchbar from "@/components/shared/search/LocalSearchbar";
-import { UserFilters } from "@/constants/filters";
+import { TagFilters, UserFilters } from "@/constants/filters";
 import { getAllTags } from "@/lib/actions/tag.action";
-import { getUsers } from "@/lib/actions/user.action";
 import { CommonPageProps } from "@/types";
 import React from "react";
 
-const Page = async ({ searchParams: { q } }: CommonPageProps) => {
-  const { tags } = await getAllTags({ searchQuery: q });
+const Page = async ({ searchParams: { q, filter } }: CommonPageProps) => {
+  const { tags } = await getAllTags({ searchQuery: q, filter });
   // console.log(users);
   return (
     <>
@@ -25,7 +24,7 @@ const Page = async ({ searchParams: { q } }: CommonPageProps) => {
         />
 
         <Filter
-          filter={UserFilters}
+          filter={TagFilters}
           otherClasses="min-h-[56px] sm:min-w-[170px]"
           containerClasses="flex"
         />

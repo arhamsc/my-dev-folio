@@ -2,19 +2,19 @@ import NoResult from "@/components/shared/NoResult";
 import QuestionCard from "@/components/shared/cards/QuestionCard";
 import Filter from "@/components/shared/filters/Filter";
 import LocalSearchbar from "@/components/shared/search/LocalSearchbar";
-import {  QuestionFilters } from "@/constants/filters";
+import { QuestionFilters } from "@/constants/filters";
 import { getSavedQuestions } from "@/lib/actions/user.action";
 import { CommonPageProps } from "@/types";
 import { auth } from "@clerk/nextjs";
 import { redirect } from "next/navigation";
 import React from "react";
 
-const Home = async ({searchParams: {q}}:CommonPageProps) => {
+const Home = async ({ searchParams: { q, filter } }: CommonPageProps) => {
   const { userId: clerkId } = auth();
 
   if (!clerkId) redirect("/sign-in");
 
-  const result = await getSavedQuestions({ clerkId, searchQuery: q});
+  const result = await getSavedQuestions({ clerkId, searchQuery: q, filter });
 
   return (
     <>

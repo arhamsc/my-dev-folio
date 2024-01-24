@@ -8,18 +8,22 @@ import { getAnswers } from "@/lib/actions/answer.action";
 import { getQuestionById } from "@/lib/actions/question.action";
 import { getUserById } from "@/lib/actions/user.action";
 import { formatNumberWithExtension, getTimestamp } from "@/lib/utils";
+import { CommonPageProps } from "@/types";
 import { SignedIn, auth } from "@clerk/nextjs";
 import Image from "next/image";
 import Link from "next/link";
 import React from "react";
 
-interface QuestionDetailPageProps {
+interface QuestionDetailPageProps extends CommonPageProps {
   params: {
     questionId: string;
   };
 }
 
-const Page = async ({ params: { questionId } }: QuestionDetailPageProps) => {
+const Page = async ({
+  params: { questionId },
+  searchParams: { filter },
+}: QuestionDetailPageProps) => {
   const { question } = await getQuestionById({ questionId });
   const { answers } = await getAnswers({ questionId });
   const { userId: clerkId } = auth();
@@ -103,6 +107,7 @@ const Page = async ({ params: { questionId } }: QuestionDetailPageProps) => {
         questionId={question._id}
         userId={JSON.stringify(mongoUser?._id)}
         totalAnswers={answers.length}
+        filter={filter}
       />
 
       <Answers

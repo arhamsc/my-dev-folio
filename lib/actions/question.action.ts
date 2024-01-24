@@ -1,6 +1,6 @@
 "use server";
 
-import Question from "@/db/question.model";
+import Question, { IQuestion } from "@/db/question.model";
 import { connectToDatabase } from "../mongoose";
 import Tag from "@/db/tag.model";
 import {
@@ -14,7 +14,7 @@ import {
 } from "./shared.types";
 import User from "@/db/user.model";
 import { revalidatePath } from "next/cache";
-import { Types } from "mongoose";
+import { FilterQuery, PipelineStage, QueryOptions, Types } from "mongoose";
 import Answer from "@/db/answer.model";
 import Interaction from "@/db/interaction.model";
 
@@ -23,20 +23,48 @@ export async function getQuestions(params: GetQuestionsParams) {
     const { filter, page = 1, pageSize = 10, searchQuery } = params;
     connectToDatabase();
 
-    const questions = await Question.find({
-      $or: [
-        { title: { $regex: new RegExp(searchQuery ?? "", "i") } },
-        { content: { $regex: new RegExp(searchQuery ?? "", "i") } },
-      ],
-    })
+    let pipeline: PipelineStage[] = [];
+
+    if (searchQuery) {
+      pipeline = [
+        ...pipeline,
+        {
+          $match: {
+            $or: [
+              { title: { $regex: new RegExp(searchQuery ?? "", "i") } },
+              { content: { $regex: new RegExp(searchQuery ?? "", "i") } },
+            ],
+          },
+        },
+      ];
+    }
+    pipeline = [...pipeline, { $sort: { createdAt: -1 } }];
+
+    switch (filter?.toLowerCase()) {
+      case "newest":
+        pipeline = [...pipeline, { $sort: { createdAt: -1 } }];
+        break;
+      case "unanswered":
+        pipeline = [
+          ...pipeline,
+          { $match: { $expr: { $lt: [{ $size: "$answers" }, 1] } } },
+        ];
+        break;
+      case "frequent":
+        pipeline = [...pipeline, { $sort: { views: -1 } }];
+        break;
+      case "recommended":
+        break;
+    }
+
+    const unpopulatedQuestions = await Question.aggregate(pipeline)
       .skip((page - 1) * pageSize)
-      .limit(pageSize)
-      .populate({
-        path: "tags",
-        model: Tag,
-      })
-      .populate({ path: "author", model: User })
-      .sort({ createdAt: -1 });
+      .limit(pageSize);
+
+    const questions = await Question.populate(unpopulatedQuestions, [
+      { path: "author", model: User, select: "_id name picture username" },
+      { path: "tags", model: Tag, select: "_id name" },
+    ]);
 
     return { questions };
   } catch (error) {

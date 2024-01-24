@@ -1,6 +1,6 @@
 "use server";
 
-import { FilterQuery } from "mongoose";
+import { FilterQuery, Query, QueryOptions } from "mongoose";
 import User from "@/db/user.model";
 import { connectToDatabase } from "../mongoose";
 import {
@@ -13,23 +13,39 @@ import {
   UpdateUserParams,
 } from "./shared.types";
 import { revalidatePath } from "next/cache";
-import Question from "@/db/question.model";
+import Question, { IQuestion } from "@/db/question.model";
 import Tag from "@/db/tag.model";
 import Answer from "@/db/answer.model";
 import { clerkClient } from "@clerk/nextjs/server";
+import page from "@/app/(root)/(home)/page";
 
 export async function getUsers(params: GetAllUsersParams) {
   try {
     connectToDatabase();
     const { filter, page = 1, pageSize = 20, searchQuery } = params;
+    const sortQuery: QueryOptions = { joinedAt: -1 };
+
+    switch (filter?.toLowerCase()) {
+      case "new_users":
+        sortQuery.joinedAt = -1;
+        break;
+      case "old_users":
+        sortQuery.joinedAt = 1;
+        break;
+      case "top_contributors":
+        sortQuery.reputation = -1;
+        break;
+    }
+
     const users = await User.find({})
       .or([
-        {name: {$regex: new RegExp(searchQuery ?? "", "i")}},
-        {username: {$regex: new RegExp(searchQuery ?? "", "i")}},
+        { name: { $regex: new RegExp(searchQuery ?? "", "i") } },
+        { username: { $regex: new RegExp(searchQuery ?? "", "i") } },
       ])
       .skip((page - 1) * pageSize)
       .limit(pageSize)
-      .sort({ createdAt: -1 });
+      .sort(sortQuery);
+    console.log({ users });
     return { users };
   } catch (error) {
     console.log({ error });
@@ -122,19 +138,47 @@ export async function deleteUser(params: DeleteUserParams) {
 
 export async function getSavedQuestions(params: GetSavedQuestionsParams) {
   try {
-    const { clerkId, filter, page, pageSize, searchQuery } = params;
+    const { clerkId, filter, page = 1, pageSize = 10, searchQuery } = params;
     connectToDatabase();
+
     const query: FilterQuery<typeof Question> = searchQuery
       ? {
           title: { $regex: new RegExp(searchQuery, "i") },
         }
       : {};
+
+    const questionSortFilter: QueryOptions<IQuestion> = {};
+
+    switch (filter?.toLowerCase()) {
+      case "most_recent":
+        questionSortFilter.createdAt = -1;
+        break;
+      case "oldest":
+        questionSortFilter.createdAt = 1;
+        break;
+      case "most_voted":
+        questionSortFilter.upvotes = -1;
+        break;
+      case "most_viewed":
+        questionSortFilter.views = -1;
+        break;
+      case "most_answered":
+        questionSortFilter.answers = -1;
+        break;
+    }
+
+    if (!filter) {
+      questionSortFilter.createdAt = -1;
+    }
+    
     const user = await User.findOne({ clerkId }).populate({
       path: "saved",
       match: query,
       model: Question,
       options: {
-        sort: { createdAt: -1 },
+        sort: questionSortFilter,
+        limit: pageSize,
+        skip: (page - 1) * pageSize,
       },
       populate: [
         { path: "tags", model: Tag, select: "_id name" },

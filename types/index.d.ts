@@ -48,6 +48,6 @@ export interface BadgeCounts {
 export type BadgeCriteriaType = keyof typeof BADGE_CRITERIA;
 
 export interface CommonPageProps {
-  searchParams: { q?: string };
+  searchParams: { q?: string; filter?: string; page?: string; pageLimit?: string };
   params: Record<string, string?>;
 }

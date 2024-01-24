@@ -7,11 +7,11 @@ import { getUsers } from "@/lib/actions/user.action";
 import { CommonPageProps } from "@/types";
 import React from "react";
 
-const Page = async ({ searchParams: { q } }: CommonPageProps) => {
+const Page = async ({ searchParams: { q, filter } }: CommonPageProps) => {
   const { users } = await getUsers({
     searchQuery: q,
+    filter,
   });
-  // console.log(users);
   return (
     <>
       <h1 className="h1-bold text-dark100_light900">All Users</h1>

@@ -8,7 +8,7 @@ import {
   GetTopInteractedTagsParams,
 } from "./shared.types";
 import Tag, { ITag } from "@/db/tag.model";
-import { FilterQuery } from "mongoose";
+import { FilterQuery, QueryOptions } from "mongoose";
 import Question from "@/db/question.model";
 
 export async function getTopInteractedTags(params: GetTopInteractedTagsParams) {
@@ -30,6 +30,27 @@ export async function getAllTags(params: GetAllTagsParams) {
   try {
     await connectToDatabase();
     const { filter, page = 1, pageSize = 10, searchQuery } = params;
+    const sortFilter: QueryOptions<ITag> = {};
+
+    if (!filter) {
+      sortFilter.createdOn = -1;
+    } else {
+      switch (filter?.toLowerCase()) {
+        case "popular":
+          sortFilter.questions = -1;
+          break;
+        case "recent":
+          sortFilter.createdOn = -1;
+          break;
+        case "name":
+          sortFilter.name = 1;
+          break;
+        case "old":
+          sortFilter.createdOn = 1;
+          break;
+      }
+    }
+
     const tags = await Tag.find({
       $or: [
         { name: { $regex: new RegExp(searchQuery ?? "", "i") } },
@@ -38,7 +59,7 @@ export async function getAllTags(params: GetAllTagsParams) {
     })
       .skip((page - 1) * pageSize)
       .limit(pageSize)
-      .sort({ createdAt: -1 });
+      .sort(sortFilter);
 
     // if (!user) throw new Error("User not found");
 
