@@ -6,6 +6,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import React from "react";
+import { toast } from "../ui/use-toast";
 
 interface EditDeleteActionsProps {
   itemId: string;
@@ -22,10 +23,24 @@ const EditDeleteActions = ({
 }: EditDeleteActionsProps) => {
   const path = usePathname();
   const handleDelete = async (itemId: string) => {
-    if (type === "question") {
-      deleteQuestion({ questionId: JSON.parse(itemId), path });
-    } else if (type === "answer") {
-      deleteAnswer({ answerId: JSON.parse(itemId), path });
+    try {
+      if (type === "question") {
+        deleteQuestion({ questionId: JSON.parse(itemId), path });
+        return toast({
+          title: "Question deleted successfully",
+        });
+      } else if (type === "answer") {
+        deleteAnswer({ answerId: JSON.parse(itemId), path });
+        return toast({
+          title: "Answer deleted successfully",
+        });
+      }
+    } catch (error: any) {
+      return toast({
+        title: "Could not delete",
+        variant: "destructive",
+        description: error.message ?? "Something went wrong",
+      });
     }
   };
   return (

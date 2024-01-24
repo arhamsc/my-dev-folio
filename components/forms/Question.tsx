@@ -21,6 +21,7 @@ import Image from "next/image";
 import { createQuestion, editQuestion } from "@/lib/actions/question.action";
 import { usePathname, useRouter } from "next/navigation";
 import { useTheme } from "@/context/ThemeProvider";
+import { toast } from "../ui/use-toast";
 
 // const type: string = "create";
 
@@ -108,7 +109,10 @@ export function Question(props: QuestionProps) {
           path: pathname,
         });
         router.push(`/question/${JSON.parse(props.questionDetails._id)}`);
-        return;
+        return toast({
+          title: "Question edited",
+          description: "Your question has been edited successfully",
+        });
       }
       await createQuestion({
         title: values.title,
@@ -117,8 +121,18 @@ export function Question(props: QuestionProps) {
         author: JSON.parse(props.mongoUserId),
         path: pathname,
       });
+      toast({
+        title: "Question created",
+        description: "Your question has been edited successfully",
+      });
       router.push("/");
-    } catch (error) {}
+    } catch (error: any) {
+      return toast({
+        title: "Could not save question",
+        variant: "destructive",
+        description: error.message ?? "Something went wrong",
+      });
+    }
     console.log(values);
   };
   return (

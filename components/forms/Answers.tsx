@@ -19,6 +19,7 @@ import { Button } from "../ui/button";
 import Image from "next/image";
 import { createAnswer } from "@/lib/actions/answer.action";
 import { usePathname } from "next/navigation";
+import { toast } from "../ui/use-toast";
 
 interface AnswerProps {
   question: string;
@@ -53,8 +54,15 @@ const Answers = ({ authorId, question, questionId }: AnswerProps) => {
         const editor = editorRef.current as any;
         editor.setContent("");
       }
-    } catch (error) {
-      console.log({ error });
+      return toast({
+        title: "Answer created successfully",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Could not create answer",
+        variant: "destructive",
+        description: error.message ?? "Something went wrong",
+      });
     }
   };
 
@@ -79,9 +87,15 @@ const Answers = ({ authorId, question, questionId }: AnswerProps) => {
         const editor = editorRef.current as any;
         editor.setContent(formattedAnswer);
       }
-    } catch (error) {
-      console.log({ error });
-      throw error;
+      return toast({
+        title: "AI Answer generated successfully",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Could not generate AI answer",
+        variant: "destructive",
+        description: error.message ?? "Something went wrong",
+      });
     } finally {
       setIsSubmittingAI(false);
     }
@@ -95,7 +109,7 @@ const Answers = ({ authorId, question, questionId }: AnswerProps) => {
         <Button
           className="btn light-border-2 gap-1.5 rounded-md px-4 py-2.5 text-primary-500 shadow-none dark:text-primary-500"
           disabled={isSubmittingAI}
-          onClick={() => isSubmittingAI ? () => {} : generateAIAnswer()}>
+          onClick={() => (isSubmittingAI ? () => {} : generateAIAnswer())}>
           {" "}
           {isSubmittingAI ? (
             <>Generating...</>

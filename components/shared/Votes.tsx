@@ -12,6 +12,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { handleAnswerVote } from "@/lib/actions/answer.action";
 import { viewQuestion } from "@/lib/actions/interaction.action";
 import { undefined } from "zod";
+import { toast } from "../ui/use-toast";
 
 interface VotesProps {
   type: "question" | "answer";
@@ -37,29 +38,67 @@ const Votes = ({
   const path = usePathname();
   const router = useRouter();
   const handleSave = async () => {
-    await handleQuestionSave({
-      path,
-      questionId: JSON.parse(itemId),
-      userId: JSON.parse(userId),
-    });
-  };
-
-  const handleVote = async (action: string) => {
-    if (type === "question") {
-      await handleQuestionVote({
-        hasdownVoted: action === "downvote",
-        hasupVoted: action === "upvote",
+    try {
+      await handleQuestionSave({
         path,
         questionId: JSON.parse(itemId),
         userId: JSON.parse(userId),
       });
-    } else if (type === "answer") {
-      await handleAnswerVote({
-        hasdownVoted: action === "downvote",
-        hasupVoted: action === "upvote",
-        path,
-        answerId: JSON.parse(itemId),
-        userId: JSON.parse(userId),
+      return toast({
+        title: "Question saved/unsaved successfully",
+        description: "You can view your saved questions in your profile",
+      });
+    } catch (error: any) {
+      return toast({
+        title: "Could not save question",
+        variant: "destructive",
+        description: error.message ?? "Something went wrong",
+      });
+    }
+  };
+
+  const handleVote = async (action: string) => {
+    if (!userId) {
+      return toast({
+        title: "Please log in",
+        description: "You need to be logged in to vote",
+      });
+    }
+    try {
+      if (type === "question") {
+        await handleQuestionVote({
+          hasdownVoted: action === "downvote",
+          hasupVoted: action === "upvote",
+          path,
+          questionId: JSON.parse(itemId),
+          userId: JSON.parse(userId),
+        });
+      } else if (type === "answer") {
+        await handleAnswerVote({
+          hasdownVoted: action === "downvote",
+          hasupVoted: action === "upvote",
+          path,
+          answerId: JSON.parse(itemId),
+          userId: JSON.parse(userId),
+        });
+      }
+
+      if (action === "upvote") {
+        return toast({
+          title: `Upvote ${action === "upvote" ? "added" : "removed"}`,
+          variant: !(action === "upvote") ? "default" : "destructive",
+        });
+      } else {
+        return toast({
+          title: `Downvote ${action === "downvote" ? "added" : "removed"}`,
+          variant: !(action === "downvote") ? "default" : "destructive",
+        });
+      }
+    } catch (error: any) {
+      return toast({
+        title: "Could not vote",
+        variant: "destructive",
+        description: error.message ?? "Something went wrong",
       });
     }
   };

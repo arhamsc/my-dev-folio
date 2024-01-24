@@ -31,7 +31,7 @@ const LocalSeachbar = ({
 
   useEffect(() => {
     const delayDebounceFn = setTimeout(() => {
-      if(search) {
+      if (search) {
         const newUrl = formUrlQuery({
           params: searchParams.toString(),
           key: "q",
@@ -39,8 +39,11 @@ const LocalSeachbar = ({
         });
         router.push(newUrl, { scroll: false });
       } else {
-        if(pathname === route) {
-          const newUrl = removeKeysFromQuery({params: searchParams.toString(), keys: ["q"]});
+        if (pathname === route) {
+          const newUrl = removeKeysFromQuery({
+            params: searchParams.toString(),
+            keys: ["q"],
+          });
           router.push(newUrl, { scroll: false });
         }
       }
@@ -66,7 +69,7 @@ const LocalSeachbar = ({
           placeholder={placeholder}
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="paragraph-regular no-focus placeholder background-light800_darkgradient border-none shadow-none"
+          className="paragraph-regular no-focus text-dark200_light800 placeholder background-light800_darkgradient border-none shadow-none"
         />
 
         {iconPosition === "right" && (
