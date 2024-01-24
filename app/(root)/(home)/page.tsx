@@ -23,6 +23,7 @@ const Home = async ({
     page: +(page ?? 1),
     pageSize: +(pageLimit ?? defaultPageLimit),
   });
+
   return (
     <>
       <div className="flex w-full flex-col-reverse justify-between gap-4 sm:flex-row sm:items-center">

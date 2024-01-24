@@ -33,7 +33,7 @@ const EditDeleteActions = ({
       {authorClerkId === clerkId && (
         <div className="flex items-center justify-end gap-3">
           {type === "question" ? (
-            <Link href={`/${type}/${itemId}/edit`}>
+            <Link href={`/${type}/${JSON.parse(itemId)}/edit`}>
               <Image
                 src={"/assets/icons/edit.svg"}
                 alt="Edit"

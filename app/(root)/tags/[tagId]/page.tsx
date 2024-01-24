@@ -25,7 +25,7 @@ const Page = async ({
     searchQuery: q,
     pageSize: +pageLimit,
   });
-  console.log({ t: tag.totalQuestions });
+  
   return (
     <>
       <h1 className="h1-bold text-dark100_light900 capitalize">{tag.name}</h1>

@@ -33,6 +33,8 @@ const Page = async ({
     mongoUser = await getUserById({ userId: clerkId });
   }
 
+  // return <Loading/>
+
   return (
     <>
       <div className="flex-start w-full flex-col">

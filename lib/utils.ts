@@ -68,7 +68,7 @@ export const formUrlQuery = ({ params, key, value }: UrlQueryParams) => {
   return qs.stringifyUrl(
     {
       url: typeof window !== "undefined" ? window.location.pathname : "",
-      query: currentUrl,
+      query: typeof window !== "undefined" ? currentUrl : qs.parse(""),
     },
     { skipNull: true }
   );
