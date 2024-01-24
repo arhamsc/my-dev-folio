@@ -9,9 +9,12 @@ import { getQuestions } from "@/lib/actions/question.action";
 import Link from "next/link";
 import React from "react";
 
+interface HomeProps {
+  searchParams: { q: string };
+}
 
-const Home = async () => {
-  const result = await getQuestions({});
+const Home = async ({ searchParams: { q } }: HomeProps) => {
+  const result = await getQuestions({searchQuery: q});
   // console.log(result.questions);
   return (
     <>

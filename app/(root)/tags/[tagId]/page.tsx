@@ -25,7 +25,7 @@ const Page = async ({
       <h1 className="h1-bold text-dark100_light900 capitalize">{tag.name}</h1>
 
       <LocalSearchbar
-        route="/"
+        route={`/tags/${tagId}`}
         iconPosition="left"
         imgUrl="/assets/icons/search.svg"
         placeholder="Search Tag Questions"

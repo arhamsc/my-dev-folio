@@ -29,8 +29,16 @@ export async function getTopInteractedTags(params: GetTopInteractedTagsParams) {
 export async function getAllTags(params: GetAllTagsParams) {
   try {
     await connectToDatabase();
-    const { filter, page, pageSize, searchQuery } = params;
-    const tags = await Tag.find({});
+    const { filter, page = 1, pageSize = 10, searchQuery } = params;
+    const tags = await Tag.find({
+      $or: [
+        { name: { $regex: new RegExp(searchQuery ?? "", "i") } },
+        { description: { $regex: new RegExp(searchQuery ?? "", "i") } },
+      ],
+    })
+      .skip((page - 1) * pageSize)
+      .limit(pageSize)
+      .sort({ createdAt: -1 });
 
     // if (!user) throw new Error("User not found");
 

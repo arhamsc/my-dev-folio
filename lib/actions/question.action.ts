@@ -20,10 +20,17 @@ import Interaction from "@/db/interaction.model";
 
 export async function getQuestions(params: GetQuestionsParams) {
   try {
-    // const {} = params;
+    const { filter, page = 1, pageSize = 10, searchQuery } = params;
     connectToDatabase();
 
-    const questions = await Question.find({})
+    const questions = await Question.find({
+      $or: [
+        { title: { $regex: new RegExp(searchQuery ?? "", "i") } },
+        { content: { $regex: new RegExp(searchQuery ?? "", "i") } },
+      ],
+    })
+      .skip((page - 1) * pageSize)
+      .limit(pageSize)
       .populate({
         path: "tags",
         model: Tag,

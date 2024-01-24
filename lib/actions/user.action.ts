@@ -22,7 +22,14 @@ export async function getUsers(params: GetAllUsersParams) {
   try {
     connectToDatabase();
     const { filter, page = 1, pageSize = 20, searchQuery } = params;
-    const users = await User.find({}).sort({ createdAt: -1 });
+    const users = await User.find({})
+      .or([
+        {name: {$regex: new RegExp(searchQuery ?? "", "i")}},
+        {username: {$regex: new RegExp(searchQuery ?? "", "i")}},
+      ])
+      .skip((page - 1) * pageSize)
+      .limit(pageSize)
+      .sort({ createdAt: -1 });
     return { users };
   } catch (error) {
     console.log({ error });
@@ -118,7 +125,9 @@ export async function getSavedQuestions(params: GetSavedQuestionsParams) {
     const { clerkId, filter, page, pageSize, searchQuery } = params;
     connectToDatabase();
     const query: FilterQuery<typeof Question> = searchQuery
-      ? { title: { $regex: new RegExp(searchQuery, "i") } }
+      ? {
+          title: { $regex: new RegExp(searchQuery, "i") },
+        }
       : {};
     const user = await User.findOne({ clerkId }).populate({
       path: "saved",
@@ -132,21 +141,6 @@ export async function getSavedQuestions(params: GetSavedQuestionsParams) {
         { path: "author", model: User, select: "_id clerkId name picture" },
       ],
     });
-    // const questions = await Question.find({
-    //   _id: { $in: user.saved },
-
-    // })
-    //   .populate({
-    //     path: "tags",
-    //     model: Tag,
-    //     select: "_id name",
-    //   })
-    //   .populate({
-    //     path: "author",
-    //     model: User,
-    //     select: "_id clerkId name picture",
-    //   })
-    //   .sort({ createdAt: -1 });
     if (!user) {
       throw new Error("User not found");
     }

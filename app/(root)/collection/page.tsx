@@ -4,16 +4,17 @@ import Filter from "@/components/shared/filters/Filter";
 import LocalSearchbar from "@/components/shared/search/LocalSearchbar";
 import {  QuestionFilters } from "@/constants/filters";
 import { getSavedQuestions } from "@/lib/actions/user.action";
+import { CommonPageProps } from "@/types";
 import { auth } from "@clerk/nextjs";
 import { redirect } from "next/navigation";
 import React from "react";
 
-const Home = async () => {
+const Home = async ({searchParams: {q}}:CommonPageProps) => {
   const { userId: clerkId } = auth();
 
   if (!clerkId) redirect("/sign-in");
 
-  const result = await getSavedQuestions({ clerkId });
+  const result = await getSavedQuestions({ clerkId, searchQuery: q});
 
   return (
     <>
@@ -21,7 +22,7 @@ const Home = async () => {
 
       <div className="mt-11 flex justify-between gap-5 max-sm:flex-col sm:items-center">
         <LocalSearchbar
-          route="/"
+          route="/collection"
           iconPosition="left"
           imgUrl="/assets/icons/search.svg"
           placeholder="Search for questions"
