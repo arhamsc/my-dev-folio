@@ -65,7 +65,7 @@ export async function getQuestions(params: GetQuestionsParams) {
       .limit(pageSize);
 
     const questions = await Question.populate(unpopulatedQuestions, [
-      { path: "author", model: User, select: "_id name picture username" },
+      { path: "author", model: User, select: "_id name picture username clerkId" },
       { path: "tags", model: Tag, select: "_id name" },
     ]);
 

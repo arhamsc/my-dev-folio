@@ -9,12 +9,14 @@ import { defaultPageLimit } from "@/constants/constants";
 import { HomePageFilters } from "@/constants/filters";
 import { getQuestions } from "@/lib/actions/question.action";
 import { CommonPageProps } from "@/types";
+import { auth } from "@clerk/nextjs";
 import Link from "next/link";
 import React from "react";
 
 const Home = async ({
   searchParams: { q, filter, pageLimit, page },
 }: CommonPageProps) => {
+  const { userId } = auth();
   const result = await getQuestions({
     searchQuery: q,
     filter,
@@ -28,7 +30,7 @@ const Home = async ({
 
         <Link href={"/ask-question"} className="flex justify-end max-sm:w-full">
           <Button className="primary-gradient min-h-[46px] p-4 !text-light-900">
-            Ask a Question
+            Ask a Questions
           </Button>
         </Link>
       </div>
@@ -48,7 +50,6 @@ const Home = async ({
         />
       </div>
       <HomeFilters />
-
       <div className="mt-10 flex w-full flex-col gap-6">
         {result.questions.length > 0 ? (
           result.questions.map((question) => (
@@ -62,6 +63,7 @@ const Home = async ({
               views={question.views}
               answers={question.answers}
               createdAt={question.createdAt}
+              clerkId={userId ?? ""}
             />
           ))
         ) : (
